@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>图片文字 · 对话框编辑器 Pro</title>
+
+<!-- ★ 动态加载 Google Fonts，确保字体生效 -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&family=Noto+Serif+SC:wght@400;700&family=ZCOOL+KuaiLe&family=ZCOOL+QingKe+HuangYou&family=Ma+Shan+Zheng&family=Long+Cang&family=Zhi+Mang+Xing&family=Liu+Jian+Mao+Cao&family=Roboto:wght@400;700&family=Playfair+Display:wght@700&family=Pacifico&family=Bebas+Neue&display=swap" rel="stylesheet">
+
 <style>
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   body {
@@ -117,35 +123,30 @@
     border-radius:6px;
   }
 
-  /* ============ 基础对话框 ============ */
+  /* ============ 对话框 ============ */
   .bubble-block {
     min-width:60px; padding:12px 16px;
     font-weight:600; font-size:16px; line-height:1.4;
     word-break:break-word; position:relative; white-space:pre-wrap;
     outline:none;
-  }
-
-  /* 圆角矩形 */
-  .shape-rounded { border-radius: 20px; padding: 12px 18px; }
-  /* 矩形 */
-  .shape-rect { border-radius: 8px; padding: 12px 16px; }
-  /* 圆形 */
-  .shape-circle {
-    border-radius: 50%; padding: 18px 20px; text-align: center;
-    display: flex; align-items: center; justify-content: center;
-    min-width: 80px; min-height: 80px;
-  }
-  /* 椭圆 */
-  .shape-ellipse {
-    border-radius: 50%; padding: 22px 32px; text-align: center;
-    display: flex; align-items: center; justify-content: center;
-    min-width: 100px;
-  }
-  /* 想象框 - 云朵状 */
-  .shape-thought {
-    border-radius: 50%; padding: 18px 22px; position: relative;
-    min-height: 70px; display: flex; align-items: center; justify-content: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     text-align: center;
+  }
+  .bubble-block .content { width: 100%; }
+
+  .shape-rounded { border-radius: 20px; }
+  .shape-rect { border-radius: 8px; }
+  .shape-circle {
+    border-radius: 50%;
+  }
+  .shape-ellipse {
+    border-radius: 50%;
+  }
+  .shape-thought {
+    border-radius: 50%;
+    position: relative;
   }
   .shape-thought::before {
     content:''; position:absolute; bottom:-10px; left:15px;
@@ -157,34 +158,28 @@
     width:10px; height:10px; border-radius:50%;
     background: inherit;
   }
-  /* 旁白框 - 直角带左粗线 */
   .shape-narration {
-    border-radius: 0; padding: 14px 18px;
+    border-radius: 0;
     border-left-width: 4px !important;
   }
-  /* 爆炸框 */
   .shape-exclaim {
-    padding: 16px 22px; position: relative;
+    position: relative;
     clip-path: polygon(
       0% 10%, 8% 0%, 22% 6%, 35% 0%, 50% 7%, 65% 0%, 78% 6%, 92% 0%, 100% 10%,
       94% 25%, 100% 40%, 92% 55%, 100% 70%, 92% 85%, 100% 100%, 85% 94%,
       70% 100%, 55% 93%, 40% 100%, 25% 93%, 10% 100%, 0% 90%,
       7% 75%, 0% 60%, 7% 45%, 0% 30%, 7% 15%
     );
-    display: flex; align-items: center; justify-content: center;
-    text-align: center; min-height: 70px;
   }
 
-  /* ★★★ 三角形尾巴 — 使用 CSS border 三角 ★★★ */
+  /* 三角形尾巴 */
   .bubble-block::after {
     content: '';
     position: absolute;
     width: 0;
     height: 0;
-    /* 默认隐藏，具体由 class 控制 */
     display: none;
   }
-  /* 尾巴默认颜色 = 背景色（通过 --tail-color 变量动态设置） */
   .tail-bottom-left::after {
     display: block;
     bottom: -14px;
@@ -271,9 +266,7 @@
   .tool-btn:active { transform:scale(0.94); }
   .tool-btn .ico { font-size:16px; line-height:1; }
   .tool-btn:disabled { opacity:.4; pointer-events:none; }
-  .tool-btn.active { border-color:#3b7cff; background:#242a36; color:#fff; }
 
-  /* ============ 底部样式滚动栏（不遮挡） ============ */
   .style-scroll {
     display: flex;
     gap: 6px;
@@ -303,18 +296,15 @@
     color: #fff;
   }
 
-  /* ============ 面板（内联，不再遮挡） ============ */
   .panel {
     background: #181c21;
     border-radius: 14px;
     padding: 8px 10px;
     border: 1px solid #262a30;
-    display: none;
+    display: flex;
     flex-direction: column;
     gap: 8px;
-    margin-top: 4px;
   }
-  .panel.show { display: flex; }
 
   .section-label {
     display: flex;
@@ -334,7 +324,32 @@
     border:2px solid transparent; transition:all .15s ease; flex-shrink:0;
     position: relative;
   }
-  .color-dot.active { border-color:#fff; box-shadow:0 0 0 2px #3b7cff; }
+  /* ★★★ 颜色选中标记：白色圆环 + 蓝色外圈 + 对勾 ★★★ */
+  .color-dot.active {
+    border-color: #ffffff;
+    box-shadow: 0 0 0 2px #3b7cff, 0 0 0 4px rgba(59,124,255,.4);
+  }
+  .color-dot.active::before {
+    content: '✓';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 900;
+    text-shadow: 0 1px 3px rgba(0,0,0,.9), 0 0 4px rgba(0,0,0,.6);
+    pointer-events: none;
+  }
+  /* 浅色圆点上的对勾用深色 */
+  .color-dot.active[data-color="#ffffff"]::before,
+  .color-dot.active[data-bg-color="#ffffff"]::before,
+  .color-dot.active[data-border-color="#ffffff"]::before,
+  .color-dot.active[data-bg-color="#feca57"]::before,
+  .color-dot.active[data-border-color="#feca57"]::before {
+    color: #1a1d21;
+    text-shadow: 0 1px 2px rgba(255,255,255,.5);
+  }
+
   .color-dot.custom {
     background: conic-gradient(red, yellow, lime, cyan, blue, magenta, red);
   }
@@ -348,6 +363,7 @@
     font-size:14px;
     text-shadow:0 1px 2px rgba(0,0,0,.8);
   }
+  .color-dot.custom.active::before { content: '✓'; }
 
   .slider-row {
     display:flex; align-items:center; gap:8px; padding:0 6px;
@@ -364,11 +380,10 @@
   }
   .slider-row .val { min-width:36px; text-align:right; color:#e0e6ed; font-weight:600; font-variant-numeric: tabular-nums; }
 
-  /* ★ 字体选择弹层（不占用布局，绝对定位在工具栏上方，点外部关闭） */
+  /* 字体弹层 */
   .font-picker-overlay {
     position: absolute;
-    bottom: 0; left: 0; right: 0;
-    top: 0;
+    inset: 0;
     background: rgba(0,0,0,0.5);
     display: none;
     z-index: 300;
@@ -380,7 +395,7 @@
     border-radius: 24px 24px 0 0;
     padding: 16px;
     width: 100%;
-    max-height: 60%;
+    max-height: 65%;
     overflow-y: auto;
     border-top: 1px solid #2e3238;
     animation: slideUp 0.2s ease;
@@ -509,7 +524,7 @@
   </div>
 
   <div class="toolbar">
-    <!-- 添加工具 -->
+    <!-- 工具按钮 -->
     <div class="tool-row">
       <button class="tool-btn" id="addTextBtn" type="button" disabled>
         <span class="ico">T</span><span>文字</span>
@@ -528,7 +543,7 @@
       </button>
     </div>
 
-    <!-- 对话框样式选择（内联，选中对话框时显示） -->
+    <!-- 对话框样式 -->
     <div class="style-scroll" id="styleScroll" style="display:none;">
       <div class="style-chip active" data-style="rounded">💬 圆角</div>
       <div class="style-chip" data-style="rect">▭ 矩形</div>
@@ -538,7 +553,7 @@
       <div class="style-chip" data-style="exclaim">💥 爆炸</div>
     </div>
 
-    <!-- 尾巴方向（内联，选中对话框时显示） -->
+    <!-- 尾巴方向 -->
     <div class="style-scroll" id="tailScroll" style="display:none;">
       <div class="style-chip active" data-tail="none">无尾巴</div>
       <div class="style-chip" data-tail="bottom-left">↙ 左下</div>
@@ -549,12 +564,12 @@
       <div class="style-chip" data-tail="right">→ 右</div>
     </div>
 
-    <!-- 颜色面板（内联） -->
-    <div class="panel show" id="colorPanel">
+    <!-- 颜色面板 -->
+    <div class="panel" id="colorPanel">
       <div class="section-label"><span>文字颜色</span></div>
       <div class="color-row" id="textColorRow">
-        <div class="color-dot active" data-color="#ffffff" style="background:#ffffff;"></div>
-        <div class="color-dot" data-color="#000000" style="background:#000000;"></div>
+        <div class="color-dot" data-color="#ffffff" style="background:#ffffff;"></div>
+        <div class="color-dot active" data-color="#1a1d21" style="background:#1a1d21;"></div>
         <div class="color-dot" data-color="#ff4757" style="background:#ff4757;"></div>
         <div class="color-dot" data-color="#2ed573" style="background:#2ed573;"></div>
         <div class="color-dot" data-color="#3b7cff" style="background:#3b7cff;"></div>
@@ -577,7 +592,7 @@
 
       <div class="section-label" id="borderColorLabel" style="display:none;"><span>边框颜色</span></div>
       <div class="color-row" id="borderColorRow" style="display:none;">
-        <div class="color-dot active" data-border-color="#000000" style="background:#000000;"></div>
+        <div class="color-dot active" data-border-color="#1a1d21" style="background:#1a1d21;"></div>
         <div class="color-dot" data-border-color="#ffffff" style="background:#ffffff;"></div>
         <div class="color-dot" data-border-color="#ff4757" style="background:#ff4757;"></div>
         <div class="color-dot" data-border-color="#2ed573" style="background:#2ed573;"></div>
@@ -588,28 +603,48 @@
       </div>
     </div>
 
-    <!-- 滑块面板（内联） -->
+    <!-- 滑块面板（字号/宽/高/内边距/透明度/边框/圆角） -->
     <div class="panel" id="sliderPanel">
       <div class="slider-row">
         <span class="lbl">字号</span>
         <input type="range" id="fontSizeSlider" min="12" max="96" value="22" step="1" disabled>
         <span class="val" id="fontSizeVal">22</span>
       </div>
+
+      <!-- ★ 自定义宽度 -->
+      <div class="slider-row" id="widthRow" style="display:none;">
+        <span class="lbl">宽度</span>
+        <input type="range" id="widthSlider" min="40" max="400" value="120" step="1">
+        <span class="val" id="widthVal">120</span>
+      </div>
+
+      <!-- ★ 自定义高度 -->
+      <div class="slider-row" id="heightRow" style="display:none;">
+        <span class="lbl">高度</span>
+        <input type="range" id="heightSlider" min="30" max="400" value="60" step="1">
+        <span class="val" id="heightVal">60</span>
+      </div>
+
       <div class="slider-row" id="paddingRow" style="display:none;">
         <span class="lbl">内边距</span>
-        <input type="range" id="paddingSlider" min="4" max="60" value="12" step="1">
+        <input type="range" id="paddingSlider" min="0" max="60" value="12" step="1">
         <span class="val" id="paddingVal">12</span>
       </div>
+
+      <!-- ★ 透明度：始终显示 -->
       <div class="slider-row" id="opacityRow">
         <span class="lbl">透明度</span>
         <input type="range" id="opacitySlider" min="10" max="100" value="100" step="1" disabled>
         <span class="val" id="opacityVal">100</span>
       </div>
-      <div class="slider-row" id="borderRow" style="display:none;">
+
+      <!-- ★ 边框粗细：始终显示 -->
+      <div class="slider-row" id="borderRow">
         <span class="lbl">边框</span>
-        <input type="range" id="borderSlider" min="0" max="10" value="0" step="1">
+        <input type="range" id="borderSlider" min="0" max="10" value="0" step="1" disabled>
         <span class="val" id="borderVal">0</span>
       </div>
+
       <div class="slider-row" id="radiusRow" style="display:none;">
         <span class="lbl">圆角</span>
         <input type="range" id="radiusSlider" min="0" max="60" value="20" step="1">
@@ -621,19 +656,16 @@
   <div class="home-indicator"></div>
   <div class="toast" id="toast"></div>
 
-  <!-- 隐藏系统颜色选择器 -->
   <input type="color" id="colorPicker" style="position:absolute;opacity:0;pointer-events:none;width:1px;height:1px;">
 
-  <!-- ★ 字体选择弹层（绝对定位，覆盖整个 phone-frame，点击外部关闭） -->
+  <!-- 字体弹层 -->
   <div class="font-picker-overlay" id="fontPickerOverlay">
     <div class="font-picker" id="fontPicker">
       <h3>
         <span>选择字体</span>
         <span class="close" id="fontPickerClose">✕</span>
       </h3>
-      <div class="font-list" id="fontList">
-        <!-- 字体选项由 JS 动态生成 -->
-      </div>
+      <div class="font-list" id="fontList"></div>
     </div>
   </div>
 </div>
@@ -655,6 +687,10 @@
   var resetBtn = document.getElementById('resetBtn');
   var fontSizeSlider = document.getElementById('fontSizeSlider');
   var fontSizeVal = document.getElementById('fontSizeVal');
+  var widthSlider = document.getElementById('widthSlider');
+  var widthVal = document.getElementById('widthVal');
+  var heightSlider = document.getElementById('heightSlider');
+  var heightVal = document.getElementById('heightVal');
   var paddingSlider = document.getElementById('paddingSlider');
   var paddingVal = document.getElementById('paddingVal');
   var opacitySlider = document.getElementById('opacitySlider');
@@ -668,6 +704,8 @@
   var borderColorRow = document.getElementById('borderColorRow');
   var bgColorLabel = document.getElementById('bgColorLabel');
   var borderColorLabel = document.getElementById('borderColorLabel');
+  var widthRow = document.getElementById('widthRow');
+  var heightRow = document.getElementById('heightRow');
   var paddingRow = document.getElementById('paddingRow');
   var borderRow = document.getElementById('borderRow');
   var radiusRow = document.getElementById('radiusRow');
@@ -683,32 +721,41 @@
   var fontList = document.getElementById('fontList');
 
   var selectedItem = null;
-  var currentColor = '#ffffff';
+  var currentColor = '#1a1d21';
   var currentBgColor = '#ffffff';
-  var currentBorderColor = '#000000';
+  var currentBorderColor = '#1a1d21';
   var currentFontSize = 22;
+  var currentWidth = 120;
+  var currentHeight = 60;
   var currentPadding = 12;
   var currentOpacity = 100;
   var currentBorderWidth = 0;
   var currentRadius = 20;
-  var currentFont = 'system-ui';
+  var currentFont = '"Noto Sans SC", system-ui, sans-serif';
   var itemIdCounter = 0;
   var pendingCustomType = null;
 
-  // ★ 字体列表
+  // ★ 字体列表（Google Fonts + 系统字体）
   var FONTS = [
-    { name: '系统默认', value: 'system-ui, -apple-system, sans-serif' },
-    { name: '宋体 SimSun', value: '"SimSun", "Songti SC", serif' },
-    { name: '黑体 SimHei', value: '"SimHei", "Heiti SC", sans-serif' },
-    { name: '楷体 KaiTi', value: '"KaiTi", "Kaiti SC", serif' },
-    { name: '微软雅黑', value: '"Microsoft YaHei", "PingFang SC", sans-serif' },
-    { name: '苹方 PingFang', value: '"PingFang SC", "Helvetica Neue", sans-serif' },
-    { name: 'Arial', value: 'Arial, Helvetica, sans-serif' },
-    { name: 'Times', value: '"Times New Roman", Times, serif' },
-    { name: 'Courier', value: '"Courier New", Courier, monospace' },
-    { name: 'Georgia', value: 'Georgia, serif' },
-    { name: 'Comic Sans', value: '"Comic Sans MS", cursive' },
-    { name: 'Impact', value: 'Impact, sans-serif' }
+    { name: '系统默认', value: 'system-ui, -apple-system, sans-serif', loaded: true },
+    { name: 'Noto Sans SC 思源黑体', value: '"Noto Sans SC", sans-serif', loaded: true },
+    { name: 'Noto Serif SC 思源宋体', value: '"Noto Serif SC", serif', loaded: true },
+    { name: 'ZCOOL KuaiLe 站酷快乐体', value: '"ZCOOL KuaiLe", cursive', loaded: true },
+    { name: 'ZCOOL QingKe 站酷庆科黄油', value: '"ZCOOL QingKe HuangYou", cursive', loaded: true },
+    { name: 'Ma Shan Zheng 马善政毛笔', value: '"Ma Shan Zheng", cursive', loaded: true },
+    { name: 'Long Cang 龙藏体', value: '"Long Cang", cursive', loaded: true },
+    { name: 'Zhi Mang Xing 志莽行书', value: '"Zhi Mang Xing", cursive', loaded: true },
+    { name: 'Liu Jian Mao Cao 柳建毛草', value: '"Liu Jian Mao Cao", cursive', loaded: true },
+    { name: 'Roboto', value: '"Roboto", sans-serif', loaded: true },
+    { name: 'Playfair Display', value: '"Playfair Display", serif', loaded: true },
+    { name: 'Pacifico', value: '"Pacifico", cursive', loaded: true },
+    { name: 'Bebas Neue', value: '"Bebas Neue", sans-serif', loaded: true },
+    { name: 'Arial', value: 'Arial, Helvetica, sans-serif', loaded: true },
+    { name: 'Times New Roman', value: '"Times New Roman", Times, serif', loaded: true },
+    { name: 'Courier New', value: '"Courier New", Courier, monospace', loaded: true },
+    { name: 'Georgia', value: 'Georgia, serif', loaded: true },
+    { name: 'Comic Sans MS', value: '"Comic Sans MS", cursive', loaded: true },
+    { name: 'Impact', value: 'Impact, sans-serif', loaded: true }
   ];
 
   function showToast(msg, duration) {
@@ -751,6 +798,18 @@
     fontSizeVal.textContent = fs;
     fontSizeSlider.disabled = false;
 
+    // ★ 宽度
+    var w = parseInt(el.dataset.width || el.offsetWidth || '120', 10);
+    currentWidth = w;
+    widthSlider.value = w;
+    widthVal.textContent = w;
+
+    // ★ 高度
+    var h = parseInt(el.dataset.height || el.offsetHeight || '60', 10);
+    currentHeight = h;
+    heightSlider.value = h;
+    heightVal.textContent = h;
+
     var pad = parseInt(el.dataset.padding || '12', 10);
     currentPadding = pad;
     paddingSlider.value = pad;
@@ -766,6 +825,7 @@
     currentBorderWidth = bw;
     borderSlider.value = bw;
     borderVal.textContent = bw;
+    borderSlider.disabled = false;
 
     var rd = parseInt(el.dataset.radius || '20', 10);
     currentRadius = rd;
@@ -792,9 +852,23 @@
 
   function updateColorDots(row, color, attr) {
     var dots = row.querySelectorAll('.color-dot');
+    var found = false;
     for (var i = 0; i < dots.length; i++) {
       if (dots[i].dataset.custom) continue;
-      dots[i].classList.toggle('active', dots[i].dataset[attr] === color);
+      var dotColor = dots[i].dataset[attr];
+      var match = dotColor && dotColor.toLowerCase() === color.toLowerCase();
+      dots[i].classList.toggle('active', match);
+      if (match) found = true;
+    }
+    // 如果没有匹配的预设色，则激活自定义按钮
+    if (!found) {
+      var custom = row.querySelector('.color-dot.custom');
+      if (custom) {
+        // 自定义按钮不做高亮，仅取消所有预设高亮
+        for (var j = 0; j < dots.length; j++) {
+          if (!dots[j].dataset.custom) dots[j].classList.remove('active');
+        }
+      }
     }
   }
 
@@ -805,9 +879,15 @@
     fontBtn.disabled = !selectedItem || (selectedItem.dataset.type !== 'text' && selectedItem.dataset.type !== 'bubble');
     resetBtn.disabled = !hasImage;
     deleteSelectedBtn.disabled = !selectedItem;
-    if (!selectedItem) {
-      fontSizeSlider.disabled = true;
+
+    // 透明度/边框：有选中元素就启用
+    if (selectedItem) {
+      opacitySlider.disabled = false;
+      // 只有对话框才启用边框
+      borderSlider.disabled = selectedItem.dataset.type !== 'bubble';
+    } else {
       opacitySlider.disabled = true;
+      borderSlider.disabled = true;
     }
   }
 
@@ -819,8 +899,9 @@
       bgColorLabel.style.display = 'none';
       borderColorRow.style.display = 'none';
       borderColorLabel.style.display = 'none';
+      widthRow.style.display = 'none';
+      heightRow.style.display = 'none';
       paddingRow.style.display = 'none';
-      borderRow.style.display = 'none';
       radiusRow.style.display = 'none';
       return;
     }
@@ -834,8 +915,9 @@
       bgColorLabel.style.display = 'block';
       borderColorRow.style.display = 'flex';
       borderColorLabel.style.display = 'block';
+      widthRow.style.display = 'flex';
+      heightRow.style.display = 'flex';
       paddingRow.style.display = 'flex';
-      borderRow.style.display = 'flex';
       radiusRow.style.display = 'flex';
 
       var style = selectedItem.dataset.style || 'rounded';
@@ -853,8 +935,9 @@
       bgColorLabel.style.display = 'none';
       borderColorRow.style.display = 'none';
       borderColorLabel.style.display = 'none';
+      widthRow.style.display = 'none';
+      heightRow.style.display = 'none';
       paddingRow.style.display = 'none';
-      borderRow.style.display = 'none';
       radiusRow.style.display = 'none';
     }
   }
@@ -871,7 +954,6 @@
     el.addEventListener('pointerdown', function(e) {
       if (e.target.closest('.delete-btn') || e.target.closest('.resize-handle')) return;
       if (el.querySelector('.editing')) return;
-
       e.preventDefault();
       selectItem(el);
 
@@ -882,7 +964,6 @@
       startX = e.clientX;
       startY = e.clientY;
       isDragging = true;
-
       try { el.setPointerCapture(e.pointerId); } catch(_) {}
       el.style.cursor = 'grabbing';
     });
@@ -894,14 +975,12 @@
       var dy = e.clientY - startY;
       var newLeft = startLeft + dx;
       var newTop = startTop + dy;
-
       var wrapRect = canvasWrap.getBoundingClientRect();
       var elRect = el.getBoundingClientRect();
       var maxLeft = wrapRect.width - elRect.width + 20;
       var maxTop = wrapRect.height - elRect.height + 20;
       newLeft = Math.max(-10, Math.min(newLeft, maxLeft));
       newTop = Math.max(-10, Math.min(newTop, maxTop));
-
       el.style.left = newLeft + 'px';
       el.style.top = newTop + 'px';
     });
@@ -951,11 +1030,9 @@
     editor.style.minWidth = '20px';
     editor.style.display = 'inline-block';
     editor.textContent = originalText;
-
     contentEl.style.display = 'none';
     el.appendChild(editor);
     editor.focus();
-
     try {
       var range = document.createRange();
       range.selectNodeContents(editor);
@@ -1022,27 +1099,22 @@
     var style = el.dataset.style || 'rounded';
     var tail = el.dataset.tail || 'none';
     var bgColor = el.dataset.bgColor || '#ffffff';
-    var borderColor = el.dataset.borderColor || '#000000';
+    var borderColor = el.dataset.borderColor || '#1a1d21';
     var borderWidth = parseInt(el.dataset.borderWidth || '0', 10);
     var radius = parseInt(el.dataset.radius || '20', 10);
     var opacity = parseInt(el.dataset.opacity || '100', 10);
     var padding = parseInt(el.dataset.padding || '12', 10);
     var font = el.dataset.font || currentFont;
+    var width = parseInt(el.dataset.width || '0', 10);
+    var height = parseInt(el.dataset.height || '0', 10);
 
-    // 重置 class
     el.className = 'draggable-item bubble-block';
     el.classList.add('shape-' + style);
-
-    // 尾巴 class
     el.classList.remove('tail-none', 'tail-bottom-left', 'tail-bottom-right',
                         'tail-top-left', 'tail-top-right', 'tail-left', 'tail-right');
-    if (tail !== 'none') {
-      el.classList.add('tail-' + tail);
-    } else {
-      el.classList.add('tail-none');
-    }
+    if (tail !== 'none') el.classList.add('tail-' + tail);
+    else el.classList.add('tail-none');
 
-    // 样式
     el.style.background = bgColor;
     el.style.padding = padding + 'px ' + (padding + 4) + 'px';
     if (style !== 'ellipse' && style !== 'circle' && style !== 'thought') {
@@ -1055,6 +1127,10 @@
     el.style.borderColor = borderColor;
     el.style.opacity = (opacity / 100).toString();
     el.style.fontFamily = font;
+
+    // ★ 自定义宽高
+    if (width > 0) el.style.width = width + 'px';
+    if (height > 0) el.style.height = height + 'px';
 
     // 文字颜色
     var textColor = el.dataset.color;
@@ -1070,12 +1146,11 @@
       el.style.color = textColor;
     }
 
-    // ★ 尾巴颜色 = 背景色
     el.style.setProperty('--tail-color', bgColor);
   }
 
   function applyTextStyle(el) {
-    var color = el.dataset.color || '#ffffff';
+    var color = el.dataset.color || '#1a1d21';
     var opacity = parseInt(el.dataset.opacity || '100', 10);
     var font = el.dataset.font || currentFont;
     el.style.color = color;
@@ -1123,7 +1198,6 @@
     el.appendChild(resizeHandle);
 
     makeDraggable(el);
-
     el.addEventListener('pointerdown', function(e) {
       if (e.target.closest('.delete-btn') || e.target.closest('.resize-handle') || e.target.closest('.editing')) return;
       selectItem(el);
@@ -1137,7 +1211,6 @@
 
   function addBubbleBlock(x, y, text, color, fontSize, style) {
     text = text || '对话内容';
-    color = color || currentColor;
     fontSize = fontSize || currentFontSize;
     style = style || 'rounded';
     var el = document.createElement('div');
@@ -1156,6 +1229,8 @@
     el.dataset.tail = 'none';
     el.dataset.font = currentFont;
     el.dataset.text = text;
+    el.dataset.width = '0';
+    el.dataset.height = '0';
     el.style.left = (x || 50) + 'px';
     el.style.top = (y || 50) + 'px';
     el.style.fontSize = fontSize + 'px';
@@ -1182,7 +1257,6 @@
     el.appendChild(resizeHandle);
 
     makeDraggable(el);
-
     el.addEventListener('pointerdown', function(e) {
       if (e.target.closest('.delete-btn') || e.target.closest('.resize-handle') || e.target.closest('.editing')) return;
       selectItem(el);
@@ -1191,6 +1265,20 @@
     overlayLayer.appendChild(el);
     applyBubbleStyle(el);
     selectItem(el);
+
+    // ★ 默认宽度和高度
+    requestAnimationFrame(function() {
+      var w = el.offsetWidth;
+      var h = el.offsetHeight;
+      el.dataset.width = w;
+      el.dataset.height = h;
+      if (selectedItem === el) {
+        widthSlider.value = w;
+        widthVal.textContent = w;
+        heightSlider.value = h;
+        heightVal.textContent = h;
+      }
+    });
     return el;
   }
 
@@ -1274,7 +1362,7 @@
     }
   });
 
-  // ==================== ★ 字体选择器 ====================
+  // ==================== 字体选择 ====================
   function buildFontList() {
     fontList.innerHTML = '';
     FONTS.forEach(function(f) {
@@ -1438,6 +1526,28 @@
     }
   });
 
+  // ★ 宽度
+  widthSlider.addEventListener('input', function() {
+    var v = parseInt(widthSlider.value, 10);
+    currentWidth = v;
+    widthVal.textContent = v;
+    if (selectedItem && selectedItem.dataset.type === 'bubble') {
+      selectedItem.dataset.width = v;
+      selectedItem.style.width = v + 'px';
+    }
+  });
+
+  // ★ 高度
+  heightSlider.addEventListener('input', function() {
+    var v = parseInt(heightSlider.value, 10);
+    currentHeight = v;
+    heightVal.textContent = v;
+    if (selectedItem && selectedItem.dataset.type === 'bubble') {
+      selectedItem.dataset.height = v;
+      selectedItem.style.height = v + 'px';
+    }
+  });
+
   paddingSlider.addEventListener('input', function() {
     var v = parseInt(paddingSlider.value, 10);
     currentPadding = v;
@@ -1486,7 +1596,7 @@
     }
   });
 
-  // ==================== 导出图片 ====================
+  // ==================== 导出 ====================
   exportBtn.addEventListener('click', function() {
     if (canvasWrap.style.display === 'none' || !bgImage.src) {
       showToast('请先导入图片');
@@ -1528,7 +1638,7 @@
         ctx.globalAlpha = opacity;
 
         if (type === 'text') {
-          var textColor = el.dataset.color || '#ffffff';
+          var textColor = el.dataset.color || '#1a1d21';
           ctx.font = '700 ' + fontSize + 'px ' + font;
           ctx.fillStyle = textColor;
           ctx.textBaseline = 'top';
@@ -1567,7 +1677,7 @@
     var style = el.dataset.style || 'rounded';
     var tail = el.dataset.tail || 'none';
     var bgColor = el.dataset.bgColor || '#ffffff';
-    var borderColor = el.dataset.borderColor || '#000000';
+    var borderColor = el.dataset.borderColor || '#1a1d21';
     var borderWidth = parseInt(el.dataset.borderWidth || '0', 10) * scaleX;
     var radius = parseInt(el.dataset.radius || '20', 10) * scaleX;
     var padding = parseInt(el.dataset.padding || '12', 10) * scaleX;
@@ -1637,28 +1747,24 @@
     ctx.shadowOffsetY = 0;
     ctx.fillStyle = textColor;
     ctx.font = '600 ' + fontSize + 'px ' + font;
-    ctx.textBaseline = 'top';
-    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'center';
     var lines = text.split('\n');
     var lineHeight = fontSize * 1.4;
     var totalH = lines.length * lineHeight;
-    var startY = y + (bh - totalH) / 2 + (lineHeight - fontSize) / 2;
-    var textX = x + padding + 4 * scaleX;
-    if (style === 'ellipse' || style === 'thought') {
-      textX = x + padding;
-    }
+    var startY = y + bh/2 - totalH/2 + lineHeight/2;
+    var centerX = x + bw/2;
     for (var k = 0; k < lines.length; k++) {
-      ctx.fillText(lines[k], textX, startY + k * lineHeight);
+      ctx.fillText(lines[k], centerX, startY + k * lineHeight);
     }
   }
 
-  // ★★★ 画布绘制三角形尾巴（与 CSS 一致） ★★★
   function drawTail(ctx, tail, x, y, bw, bh, bgColor, borderColor, borderWidth) {
     if (tail === 'none') return;
     ctx.fillStyle = bgColor;
     ctx.strokeStyle = borderColor;
     ctx.lineWidth = borderWidth;
-    var size = 14 * (bw / 200); // 相对尺寸
+    var size = 14 * (bw / 200);
     if (size < 8) size = 8;
 
     ctx.beginPath();
@@ -1735,6 +1841,10 @@
 
   updateToolbarState();
   updateStylePanel();
+
+  // ★ 默认打开颜色面板
+  document.getElementById('colorPanel').classList.add('show');
+
   console.log('[初始化] 编辑器 Pro 已就绪');
 })();
 </script>
