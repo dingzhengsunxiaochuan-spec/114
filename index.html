@@ -37,7 +37,6 @@
   .btn-primary { background:#3b7cff; color:#fff; padding:10px 18px; font-size:14px;
     box-shadow:0 4px 12px rgba(59,124,255,.4); }
 
-  /* ★★★ 关键修复：让 input 覆盖在按钮上，用户直接点到它 ★★★ */
   .file-input-overlay {
     position: absolute;
     top: 0; left: 0;
@@ -45,11 +44,11 @@
     opacity: 0;
     cursor: pointer;
     z-index: 10;
-    /* 不加 display:none，否则移动端点击可能无效 */
   }
 
+  /* ★ 舞台：固定尺寸，内部 flex 居中 */
   .editor-stage {
-    flex:1; position:relative; overflow:hidden; background:#0a0c0e;
+    flex:1; position:relative; overflow:hidden;
     margin:0 16px; border-radius:24px; border:1px solid #23272d;
     display:flex; align-items:center; justify-content:center;
     background-image:
@@ -60,22 +59,39 @@
     background-size:20px 20px;
     background-position:0 0,0 10px,10px -10px,-10px 0px;
     background-color:#0f1114;
+    min-height: 0;  /* flex 子项允许收缩 */
   }
+
+  /* ★ 关键：canvas-wrap 使用相对定位，尺寸由内部图片撑开 */
   .canvas-wrap {
-    position:relative; max-width:100%; max-height:100%;
-    display:flex; align-items:center; justify-content:center;
+    position:relative;
+    display:inline-block;
+    line-height:0;  /* 消除 img 底部的空隙 */
+    max-width:100%;
+    max-height:100%;
   }
+
   #bgImage {
-    max-width:100%; max-height:100%; display:block; object-fit:contain;
-    pointer-events:none; border-radius:8px; box-shadow:0 8px 30px rgba(0,0,0,.6);
+    display:block;
+    max-width:100%;
+    max-height:100%;
+    width:auto;
+    height:auto;
+    object-fit:contain;
+    pointer-events:none;
+    border-radius:8px;
+    box-shadow:0 8px 30px rgba(0,0,0,.6);
   }
+
   .placeholder {
     display:flex; flex-direction:column; align-items:center; justify-content:center;
     color:#5a6371; gap:12px; padding:40px; text-align:center; pointer-events:none;
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
   }
   .placeholder .icon { font-size:52px; opacity:.6; }
   .placeholder .text { font-size:14px; line-height:1.5; font-weight:500; }
 
+  /* ★ overlay 精确覆盖 canvas-wrap（即图片区域） */
   .overlay-layer {
     position:absolute; top:0; left:0; width:100%; height:100%;
     pointer-events:none; overflow:visible; border-radius:8px;
@@ -206,7 +222,6 @@
   <div class="app-bar">
     <h1>图片编辑器</h1>
     <div class="actions">
-      <!-- ★★★ 关键：input 直接包在按钮里，用透明度覆盖 ★★★ -->
       <button class="btn btn-sm" id="importBtn" title="导入图片">
         <input type="file" id="fileInput" class="file-input-overlay" accept="image/*">
         📁 导入
@@ -216,12 +231,12 @@
   </div>
 
   <div class="editor-stage" id="editorStage">
-    <div class="canvas-wrap" id="canvasWrap">
-      <img id="bgImage" alt="背景图片" style="display:none;">
-      <div class="placeholder" id="placeholder">
-        <div class="icon">🖼️</div>
-        <div class="text">点击“导入”按钮<br>选择一张图片开始编辑</div>
-      </div>
+    <div class="placeholder" id="placeholder">
+      <div class="icon">🖼️</div>
+      <div class="text">点击“导入”按钮<br>选择一张图片开始编辑</div>
+    </div>
+    <div class="canvas-wrap" id="canvasWrap" style="display:none;">
+      <img id="bgImage" alt="背景图片">
       <div class="overlay-layer" id="overlayLayer"></div>
     </div>
   </div>
@@ -336,7 +351,7 @@
   }
 
   function updateToolbarState() {
-    var hasImage = bgImage.style.display !== 'none' && bgImage.src;
+    var hasImage = canvasWrap.style.display !== 'none' && bgImage.src;
     addTextBtn.disabled = !hasImage;
     addBubbleBtn.disabled = !hasImage;
     resetBtn.disabled = !hasImage;
@@ -360,10 +375,10 @@
       e.preventDefault();
       selectItem(el);
 
-      var stageRect = editorStage.getBoundingClientRect();
+      var wrapRect = canvasWrap.getBoundingClientRect();
       var elRect = el.getBoundingClientRect();
-      startLeft = elRect.left - stageRect.left;
-      startTop = elRect.top - stageRect.top;
+      startLeft = elRect.left - wrapRect.left;
+      startTop = elRect.top - wrapRect.top;
       startX = e.clientX;
       startY = e.clientY;
       isDragging = true;
@@ -381,10 +396,10 @@
       var newLeft = startLeft + dx;
       var newTop = startTop + dy;
 
-      var stageRect = editorStage.getBoundingClientRect();
+      var wrapRect = canvasWrap.getBoundingClientRect();
       var elRect = el.getBoundingClientRect();
-      var maxLeft = stageRect.width - elRect.width + 20;
-      var maxTop = stageRect.height - elRect.height + 20;
+      var maxLeft = wrapRect.width - elRect.width + 20;
+      var maxTop = wrapRect.height - elRect.height + 20;
       newLeft = Math.max(-10, Math.min(newLeft, maxLeft));
       newTop = Math.max(-10, Math.min(newTop, maxTop));
 
@@ -612,9 +627,7 @@
     return el;
   }
 
-  // ==================== ★★★ 关键：文件导入逻辑 ★★★ ====================
-  // 因为 input 已经包裹在按钮内，用户点击按钮时会直接触发 input 的 change
-  // 但为了防止某些浏览器拦截，再绑定一次 change 事件
+  // ==================== ★★★ 关键修复：文件导入 ★★★ ====================
   fileInput.addEventListener('change', function(e) {
     var file = e.target.files && e.target.files[0];
     if (!file) return;
@@ -624,65 +637,62 @@
       return;
     }
 
-    // 检查文件大小（可选，超过 10MB 提示）
-    if (file.size > 10 * 1024 * 1024) {
-      showToast('图片过大，建议小于 10MB');
-    }
+    showToast('正在加载图片…', 1200);
 
     var reader = new FileReader();
+
     reader.onload = function(ev) {
-      bgImage.onload = function() {
-        bgImage.style.display = 'block';
+      // ★ 先绑定 onload，再赋值 src（避免缓存导致 onload 不触发）
+      var tempImg = new Image();
+      tempImg.onload = function() {
+        // 图片加载成功，赋值到真实 img
+        bgImage.src = tempImg.src;
+
+        // 显示 canvas-wrap，隐藏 placeholder
+        canvasWrap.style.display = 'inline-block';
         placeholder.style.display = 'none';
-        // 重置画布尺寸，让 overlay 覆盖图片
-        resizeOverlay();
+
+        // 显示图片（默认样式 display:block）
+        bgImage.style.display = 'block';
+
+        // 清空旧的 overlay 内容
+        overlayLayer.innerHTML = '';
+        selectedItem = null;
+
         updateToolbarState();
         showToast('✅ 图片已导入');
       };
-      bgImage.onerror = function() {
-        showToast('图片加载失败');
+      tempImg.onerror = function() {
+        showToast('图片加载失败，请换一张');
       };
-      bgImage.src = ev.target.result;
+      tempImg.src = ev.target.result;
     };
+
     reader.onerror = function() {
       showToast('读取文件失败');
     };
+
     reader.readAsDataURL(file);
 
-    // 清空 input，允许重复选择同一张图
-    setTimeout(function() { fileInput.value = ''; }, 100);
+    // 清空 input 允许重新选择同一张
+    setTimeout(function() { fileInput.value = ''; }, 200);
   });
 
-  // 调整 overlayLayer 尺寸与图片一致
-  function resizeOverlay() {
-    if (!bgImage.src || bgImage.style.display === 'none') return;
-    // overlay-layer 是 absolute 定位在 canvas-wrap 内
-    // 图片居中显示，overlay 应该覆盖整个 canvas-wrap
-    // 我们的 overlay-layer 本身就是 100% 宽高，保持默认即可
-    // 但需要确保 canvas-wrap 尺寸被图片撑开
-  }
-
-  // 兜底：点击按钮时再触发一次（防止某些旧浏览器不识别包裹的 input）
+  // 兜底：点击按钮时触发 input（防止某些浏览器不识别包裹的 input）
   importBtn.addEventListener('click', function(e) {
-    // 如果点击事件来自 input 本身，跳过
     if (e.target === fileInput) return;
-    // 否则尝试触发 input 点击
-    try {
-      fileInput.click();
-    } catch (err) {
-      // 忽略，可能已被 input 覆盖层处理
-    }
+    try { fileInput.click(); } catch (err) {}
   });
 
   // ==================== 添加按钮 ====================
   addTextBtn.addEventListener('click', function() {
-    if (bgImage.style.display === 'none') { showToast('请先导入图片'); return; }
+    if (canvasWrap.style.display === 'none') { showToast('请先导入图片'); return; }
     addTextBlock(40, 40, '双击编辑文字', currentColor, currentFontSize);
     showToast('已添加文字');
   });
 
   addBubbleBtn.addEventListener('click', function() {
-    if (bgImage.style.display === 'none') { showToast('请先导入图片'); return; }
+    if (canvasWrap.style.display === 'none') { showToast('请先导入图片'); return; }
     addBubbleBlock(60, 60, '对话内容', currentColor, currentFontSize);
     showToast('已添加对话框');
   });
@@ -743,14 +753,14 @@
 
   // 点击空白取消选中
   editorStage.addEventListener('pointerdown', function(e) {
-    if (e.target === editorStage || e.target === canvasWrap || e.target === placeholder || e.target === bgImage) {
+    if (e.target === editorStage || e.target === placeholder) {
       deselectAll();
     }
   });
 
   // ==================== 导出图片 ====================
   exportBtn.addEventListener('click', function() {
-    if (bgImage.style.display === 'none' || !bgImage.src) {
+    if (canvasWrap.style.display === 'none' || !bgImage.src) {
       showToast('请先导入图片');
       return;
     }
@@ -768,20 +778,20 @@
       canvas.height = H;
       ctx.drawImage(img, 0, 0, W, H);
 
-      // 图片显示区域
+      // 图片显示尺寸和实际尺寸比例
       var imgRect = bgImage.getBoundingClientRect();
-      var stageRect = editorStage.getBoundingClientRect();
-      var offsetX = imgRect.left - stageRect.left;
-      var offsetY = imgRect.top - stageRect.top;
+      var wrapRect = canvasWrap.getBoundingClientRect();
       var scaleX = W / imgRect.width;
       var scaleY = H / imgRect.height;
+      var offsetX = imgRect.left - wrapRect.left;
+      var offsetY = imgRect.top - wrapRect.top;
 
       var items = overlayLayer.querySelectorAll('.draggable-item');
       for (var i = 0; i < items.length; i++) {
         var el = items[i];
         var elRect = el.getBoundingClientRect();
-        var x = (elRect.left - stageRect.left - offsetX) * scaleX;
-        var y = (elRect.top - stageRect.top - offsetY) * scaleY;
+        var x = (elRect.left - wrapRect.left - offsetX) * scaleX;
+        var y = (elRect.top - wrapRect.top - offsetY) * scaleY;
         var fontSize = parseInt(el.dataset.fontSize || '22', 10) * scaleY;
         var text = el.dataset.text || '';
         var color = el.dataset.color || '#ffffff';
@@ -791,4 +801,12 @@
           ctx.font = '700 ' + fontSize + 'px system-ui, -apple-system, sans-serif';
           ctx.fillStyle = color;
           ctx.textBaseline = 'top';
-          ctx.shadowColor = 'rgba(0,
+          ctx.shadowColor = 'rgba(0,0,0,0.6)';
+          ctx.shadowBlur = 8 * scaleY;
+          ctx.shadowOffsetY = 2 * scaleY;
+          var lines = text.split('\n');
+          var lineHeight = fontSize * 1.25;
+          for (var j = 0; j < lines.length; j++) {
+            ctx.fillText(lines[j], x + 10 * scaleX, y + 6 * scaleY + j * lineHeight);
+          }
+          ctx.shadowColor = 'transparent
