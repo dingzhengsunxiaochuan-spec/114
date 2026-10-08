@@ -1,563 +1,1076 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Fish TTS · 语音合成</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background: #0a0a0f; display: flex; justify-content: center; align-items: center;
-            min-height: 100vh; padding: 16px; color: #e0e0e0;
-        }
-        .phone-frame {
-            width: 100%; max-width: 375px; height: 812px; max-height: 90vh;
-            background: #12121a; border-radius: 40px;
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.06);
-            padding: 24px 20px; display: flex; flex-direction: column;
-            position: relative; overflow: hidden;
-        }
-        .status-bar {
-            height: 44px; display: flex; justify-content: space-between; align-items: center;
-            font-size: 14px; color: #666; padding: 0 8px; margin-bottom: 8px; flex-shrink: 0;
-        }
-        .status-bar .time { font-weight: 600; color: #aaa; }
-        .status-bar .icons { display: flex; gap: 6px; font-size: 12px; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>图片文字 · 对话框编辑器</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
 
-        .header { text-align: center; margin-bottom: 20px; flex-shrink: 0; }
-        .header h1 { font-size: 22px; font-weight: 600; color: #f0f0f0; letter-spacing: 0.5px; }
-        .header h1 span { color: #6c5ce7; }
-        .header p { font-size: 12px; color: #555; margin-top: 6px; font-weight: 400; }
+    body {
+      background: #0b0d10;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+      padding: 12px;
+      overflow: hidden;
+    }
 
-        .input-section { flex: 1; display: flex; flex-direction: column; min-height: 0; overflow-y: auto; }
+    /* 手机尺寸卡片 */
+    .phone-frame {
+      width: 390px;
+      max-width: 100%;
+      height: 780px;
+      max-height: 94vh;
+      background: #111315;
+      border-radius: 44px;
+      box-shadow:
+        0 30px 50px rgba(0, 0, 0, 0.8),
+        0 0 0 8px #1e2023,
+        0 0 0 12px #2a2d31;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
 
-        .model-selector {
-            display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-shrink: 0;
-        }
-        .model-selector label {
-            font-size: 12px; color: #666; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
-            white-space: nowrap;
-        }
-        .model-selector select {
-            flex: 1; background: #1a1a24; border: 1.5px solid #2a2a3a; border-radius: 10px;
-            padding: 10px 12px; color: #ccc; font-size: 13px; outline: none; font-family: inherit;
-            cursor: pointer; appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-            background-repeat: no-repeat; background-position: right 12px center;
-        }
-        .model-selector select:focus { border-color: #6c5ce7; }
-        .model-selector select option { background: #1a1a24; color: #ccc; }
+    /* 状态栏 */
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 24px 8px 24px;
+      color: #f0f0f0;
+      font-size: 15px;
+      font-weight: 500;
+      flex-shrink: 0;
+    }
 
-        .voice-id-section {
-            display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-shrink: 0;
-        }
-        .voice-id-section label {
-            font-size: 12px; color: #666; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
-            white-space: nowrap;
-        }
-        .voice-id-section input {
-            flex: 1; background: #1a1a24; border: 1.5px solid #2a2a3a; border-radius: 10px;
-            padding: 10px 12px; color: #ccc; font-size: 13px; outline: none; font-family: inherit;
-            transition: border-color 0.25s ease, box-shadow 0.25s ease;
-        }
-        .voice-id-section input:focus {
-            border-color: #6c5ce7; box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.15);
-        }
-        .voice-id-section input::placeholder { color: #444; font-size: 12px; }
+    /* 顶部标题栏 */
+    .app-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 20px 12px 20px;
+      flex-shrink: 0;
+    }
 
-        .textarea-wrapper { position: relative; flex: 1; min-height: 100px; margin-bottom: 12px; }
-        textarea {
-            width: 100%; height: 100%; background: #1a1a24; border: 1.5px solid #2a2a3a;
-            border-radius: 16px; padding: 14px; font-size: 15px; color: #ddd;
-            resize: none; outline: none; font-family: inherit; line-height: 1.6;
-            transition: border-color 0.25s ease, box-shadow 0.25s ease; min-height: 100px;
-        }
-        textarea:focus { border-color: #6c5ce7; box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.15); }
-        textarea::placeholder { color: #444; }
-        .char-count {
-            position: absolute; bottom: 10px; right: 14px; font-size: 11px; color: #444; pointer-events: none;
-        }
+    .app-bar h1 {
+      font-size: 20px;
+      font-weight: 700;
+      color: #f0f3f7;
+      letter-spacing: -0.3px;
+    }
 
-        .tags-section { flex-shrink: 0; margin-bottom: 12px; }
-        .tags-header {
-            display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;
-        }
-        .tags-header span {
-            font-size: 11px; color: #555; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600;
-        }
-        .tags-scroll {
-            display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px;
-            scrollbar-width: none; -ms-overflow-style: none;
-        }
-        .tags-scroll::-webkit-scrollbar { display: none; }
-        .tag-btn {
-            flex-shrink: 0; display: flex; flex-direction: column; align-items: center;
-            background: #1a1a24; border: 1.5px solid #2a2a3a; border-radius: 12px;
-            padding: 8px 12px; cursor: pointer; transition: all 0.2s ease;
-            min-width: 70px; text-align: center;
-        }
-        .tag-btn:active { background: #252535; transform: scale(0.95); border-color: #6c5ce7; }
-        .tag-btn .tag-en {
-            font-size: 11px; font-weight: 700; color: #8b7cf7; font-family: monospace;
-            letter-spacing: -0.3px;
-        }
-        .tag-btn .tag-cn {
-            font-size: 10px; color: #555; margin-top: 3px; white-space: nowrap;
-        }
+    .app-bar .actions {
+      display: flex;
+      gap: 8px;
+    }
 
-        .btn-group { display: flex; gap: 12px; margin-bottom: 14px; flex-shrink: 0; }
-        .btn {
-            flex: 1; padding: 14px 0; border-radius: 14px; border: none;
-            font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s ease;
-            font-family: inherit; letter-spacing: 0.3px;
-        }
-        .btn:active { transform: scale(0.96); }
-        .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-        .btn-primary {
-            background: linear-gradient(135deg, #6c5ce7, #5a4bd1); color: #fff;
-            box-shadow: 0 4px 16px rgba(108, 92, 231, 0.3);
-        }
-        .btn-secondary { background: #1e1e2a; color: #aaa; border: 1.5px solid #2a2a3a; }
-        .btn-secondary:active:not(:disabled) { background: #252535; }
+    /* 通用小按钮 */
+    .btn {
+      border: none;
+      outline: none;
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: 600;
+      border-radius: 40px;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      -webkit-user-select: none;
+      user-select: none;
+    }
 
-        .audio-section {
-            flex-shrink: 0; background: #1a1a24; border-radius: 16px; padding: 16px;
-            border: 1.5px solid #2a2a3a; display: none; animation: slideUp 0.3s ease;
-        }
-        .audio-section.visible { display: block; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .audio-label { font-size: 11px; color: #555; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; font-weight: 600; }
-        audio { width: 100%; height: 40px; border-radius: 10px; outline: none; filter: invert(0.9) hue-rotate(180deg); }
-        .download-link { display: block; text-align: center; margin-top: 10px; font-size: 12px; color: #6c5ce7; text-decoration: none; font-weight: 500; }
-        .download-link:active { opacity: 0.7; }
+    .btn:active {
+      transform: scale(0.94);
+    }
 
-        .loading { display: none; align-items: center; justify-content: center; gap: 10px; padding: 12px; color: #888; font-size: 13px; }
-        .loading.visible { display: flex; }
-        .spinner {
-            width: 18px; height: 18px; border: 2px solid #2a2a3a; border-top-color: #6c5ce7;
-            border-radius: 50%; animation: spin 0.7s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
+    .btn-sm {
+      padding: 8px 14px;
+      font-size: 13px;
+      background: #2c3138;
+      color: #e0e6ed;
+    }
 
-        /* 错误面板（增强版） */
-        .error-panel {
-            display: none;
-            background: rgba(220, 60, 60, 0.12);
-            border: 1px solid rgba(220, 60, 60, 0.35);
-            border-radius: 12px;
-            padding: 12px 14px;
-            font-size: 12px;
-            margin-bottom: 12px;
-            line-height: 1.6;
-            position: relative;
-        }
-        .error-panel.visible { display: block; animation: fadeIn 0.25s ease; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .btn-sm:hover {
+      background: #363c45;
+    }
 
-        .error-panel .error-title {
-            display: flex; align-items: center; gap: 6px;
-            color: #f08080; font-weight: 700; margin-bottom: 6px; font-size: 13px;
-        }
-        .error-panel .error-code {
-            display: inline-block;
-            background: rgba(220, 60, 60, 0.25);
-            color: #ff9e9e;
-            font-family: monospace;
-            font-size: 11px;
-            padding: 2px 8px;
-            border-radius: 6px;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-        }
-        .error-panel .error-detail {
-            color: #d99;
-            word-break: break-word;
-            font-size: 12px;
-            margin-top: 4px;
-        }
-        .error-panel .error-hint {
-            color: #a77;
-            font-size: 11px;
-            margin-top: 6px;
-            padding-top: 6px;
-            border-top: 1px dashed rgba(220, 60, 60, 0.25);
-        }
-        .error-panel .error-close {
-            position: absolute;
-            top: 8px; right: 10px;
-            background: none; border: none;
-            color: #a77; font-size: 16px; cursor: pointer;
-            line-height: 1; padding: 4px;
-        }
-        .error-panel .error-close:active { color: #f08080; }
+    .btn-primary {
+      background: #3b7cff;
+      color: #fff;
+      padding: 10px 18px;
+      font-size: 14px;
+      box-shadow: 0 4px 12px rgba(59, 124, 255, 0.4);
+    }
 
-        .footer { flex-shrink: 0; text-align: center; padding-top: 12px; border-top: 1px solid #1e1e2a; margin-top: auto; }
-        .footer p { font-size: 10px; color: #333; letter-spacing: 0.5px; }
-    </style>
+    .btn-primary:hover {
+      background: #2e6bef;
+    }
+
+    .btn-danger {
+      background: #e5484d;
+      color: #fff;
+      padding: 8px 14px;
+      font-size: 13px;
+    }
+
+    .btn-danger:hover {
+      background: #cf3a3f;
+    }
+
+    /* 画布区域 */
+    .editor-stage {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      background: #0a0c0e;
+      margin: 0 16px;
+      border-radius: 24px;
+      border: 1px solid #23272d;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      /* 棋盘格背景表示透明区域 */
+      background-image:
+        linear-gradient(45deg, #14171b 25%, transparent 25%),
+        linear-gradient(-45deg, #14171b 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #14171b 75%),
+        linear-gradient(-45deg, transparent 75%, #14171b 75%);
+      background-size: 20px 20px;
+      background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+      background-color: #0f1114;
+    }
+
+    /* 图片容器 */
+    .canvas-wrap {
+      position: relative;
+      max-width: 100%;
+      max-height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #bgImage {
+      max-width: 100%;
+      max-height: 100%;
+      display: block;
+      object-fit: contain;
+      pointer-events: none;
+      border-radius: 8px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
+    }
+
+    /* 占位提示 */
+    .placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #5a6371;
+      gap: 12px;
+      padding: 40px;
+      text-align: center;
+      pointer-events: none;
+    }
+
+    .placeholder .icon {
+      font-size: 52px;
+      opacity: 0.6;
+    }
+
+    .placeholder .text {
+      font-size: 14px;
+      line-height: 1.5;
+      font-weight: 500;
+    }
+
+    /* 所有可拖拽元素容器 */
+    .overlay-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      overflow: hidden;
+      border-radius: 8px;
+    }
+
+    /* 可拖拽元素基础样式 */
+    .draggable-item {
+      position: absolute;
+      pointer-events: auto;
+      cursor: grab;
+      -webkit-user-select: none;
+      user-select: none;
+      touch-action: none;
+      transform-origin: center center;
+      transition: box-shadow 0.15s ease;
+      z-index: 10;
+    }
+
+    .draggable-item:active {
+      cursor: grabbing;
+    }
+
+    .draggable-item.selected {
+      z-index: 20;
+      box-shadow: 0 0 0 2px #3b7cff, 0 0 0 4px rgba(59, 124, 255, 0.3);
+      border-radius: 4px;
+    }
+
+    /* 文字块 */
+    .text-block {
+      min-width: 40px;
+      padding: 6px 10px;
+      color: #fff;
+      font-weight: 700;
+      font-size: 22px;
+      line-height: 1.25;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+      white-space: pre-wrap;
+      word-break: break-word;
+      outline: none;
+      border-radius: 6px;
+      background: rgba(0, 0, 0, 0.15);
+      backdrop-filter: blur(2px);
+      border: 1px dashed rgba(255, 255, 255, 0.25);
+    }
+
+    .text-block.editing {
+      background: rgba(0, 0, 0, 0.5);
+      border-color: #3b7cff;
+      cursor: text;
+    }
+
+    /* 对话框气泡 */
+    .bubble-block {
+      max-width: 200px;
+      min-width: 60px;
+      padding: 12px 16px;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 16px;
+      line-height: 1.4;
+      color: #1a1d21;
+      word-break: break-word;
+      position: relative;
+      white-space: pre-wrap;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+      border: 2px solid transparent;
+      outline: none;
+    }
+
+    .bubble-block.editing {
+      border-color: #3b7cff;
+      cursor: text;
+    }
+
+    /* 气泡小尾巴 */
+    .bubble-block::after {
+      content: '';
+      position: absolute;
+      bottom: -14px;
+      left: 24px;
+      width: 0;
+      height: 0;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-top: 16px solid currentColor;
+      filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.25));
+    }
+
+    /* 调整大小手柄 */
+    .resize-handle {
+      position: absolute;
+      width: 22px;
+      height: 22px;
+      background: #3b7cff;
+      border: 3px solid #fff;
+      border-radius: 50%;
+      bottom: -12px;
+      right: -12px;
+      cursor: nwse-resize;
+      pointer-events: auto;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+      touch-action: none;
+      z-index: 25;
+      display: none;
+    }
+
+    .draggable-item.selected .resize-handle {
+      display: block;
+    }
+
+    .resize-handle:active {
+      transform: scale(1.15);
+    }
+
+    /* 删除按钮 */
+    .delete-btn {
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      background: #e5484d;
+      color: #fff;
+      border: 2px solid #fff;
+      border-radius: 50%;
+      top: -12px;
+      right: -12px;
+      cursor: pointer;
+      pointer-events: auto;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+      z-index: 25;
+      padding-bottom: 1px;
+    }
+
+    .draggable-item.selected .delete-btn {
+      display: flex;
+    }
+
+    /* 底部工具栏 */
+    .toolbar {
+      flex-shrink: 0;
+      padding: 12px 20px 8px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .tool-row {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .tool-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      background: #1e2227;
+      border: 1px solid #2e3238;
+      border-radius: 16px;
+      padding: 8px 12px;
+      color: #cbd5e1;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      min-width: 60px;
+    }
+
+    .tool-btn:hover {
+      background: #282d34;
+      border-color: #3b7cff;
+    }
+
+    .tool-btn:active {
+      transform: scale(0.94);
+    }
+
+    .tool-btn .ico {
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .tool-btn:disabled {
+      opacity: 0.4;
+      pointer-events: none;
+    }
+
+    /* 颜色选择器行 */
+    .color-row {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .color-dot {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: all 0.15s ease;
+      flex-shrink: 0;
+    }
+
+    .color-dot:hover {
+      transform: scale(1.15);
+    }
+
+    .color-dot.active {
+      border-color: #fff;
+      box-shadow: 0 0 0 2px #3b7cff;
+    }
+
+    /* 字体大小滑块 */
+    .size-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 6px;
+      color: #8e98a6;
+      font-size: 12px;
+    }
+
+    .size-row input[type="range"] {
+      flex: 1;
+      -webkit-appearance: none;
+      appearance: none;
+      height: 4px;
+      background: #2e3238;
+      border-radius: 2px;
+      outline: none;
+    }
+
+    .size-row input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #3b7cff;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(59, 124, 255, 0.5);
+    }
+
+    .size-row .val {
+      min-width: 32px;
+      text-align: right;
+      color: #e0e6ed;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Home Indicator */
+    .home-indicator {
+      margin: 4px auto 10px;
+      width: 130px;
+      height: 5px;
+      background: #3d424a;
+      border-radius: 40px;
+      opacity: 0.7;
+      flex-shrink: 0;
+    }
+
+    /* 隐藏的文件输入 */
+    #fileInput {
+      display: none;
+    }
+
+    /* 小提示 */
+    .toast {
+      position: absolute;
+      bottom: 100px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: rgba(0, 0, 0, 0.85);
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 40px;
+      font-size: 13px;
+      font-weight: 500;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s ease;
+      z-index: 100;
+      white-space: nowrap;
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* 图片嵌入字体的效果（保留一个展示区） */
+    .demo-embed {
+      margin: 0 20px 12px 20px;
+      flex-shrink: 0;
+      background: #1a1d21;
+      border-radius: 18px;
+      padding: 8px 14px;
+      border: 1px solid #2e3238;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .demo-embed .label {
+      font-size: 11px;
+      color: #6e7887;
+      font-weight: 500;
+    }
+
+    .demo-embed .sample {
+      font-size: 32px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      background-image: url('https://images.unsplash.com/photo-1557682250-33bd709cbe85?w=400&q=60');
+      background-size: cover;
+      background-position: center;
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      color: transparent;
+      line-height: 1;
+    }
+
+    @media (max-width: 420px) {
+      .phone-frame {
+        height: 95vh;
+        border-radius: 36px;
+        box-shadow:
+          0 20px 40px rgba(0, 0, 0, 0.9),
+          0 0 0 6px #1e2023,
+          0 0 0 10px #2a2d31;
+      }
+      .editor-stage {
+        margin: 0 10px;
+      }
+      .toolbar {
+        padding: 10px 10px 6px 10px;
+      }
+      .tool-btn {
+        min-width: 52px;
+        padding: 6px 8px;
+        font-size: 10px;
+      }
+      .app-bar h1 {
+        font-size: 17px;
+      }
+    }
+  </style>
 </head>
 <body>
-    <div class="phone-frame">
-        <div class="status-bar">
-            <span class="time">9:41</span>
-            <div class="icons"><span>📶</span><span>🔋</span></div>
-        </div>
-
-        <div class="header">
-            <h1>Fish <span>TTS</span></h1>
-            <p>输入文字 · 生成语音</p>
-        </div>
-
-        <div class="input-section">
-            <!-- 模型选择 -->
-            <div class="model-selector">
-                <label>模型</label>
-                <select id="modelSelect">
-                    <option value="s2.1-pro">s2.1-pro（推荐 · 高质量）</option>
-                    <option value="s2.1-pro-free">s2.1-pro-free（免费 · 基础质量）</option>
-                    <option value="s2.1-pro-flash">s2.1-pro-flash（快速 · 低消耗）</option>
-                    <option value="s2-pro">s2-pro（多说话人 · 表达控制）</option>
-                    <option value="s1">s1（经典模型）</option>
-                </select>
-            </div>
-
-            <!-- 音色 ID 输入 -->
-            <div class="voice-id-section">
-                <label for="voiceIdInput">音色 ID</label>
-                <input type="text" id="voiceIdInput" placeholder="留空使用默认音色，可填入 Fish Audio 声音 ID">
-            </div>
-
-            <div class="textarea-wrapper">
-                <textarea id="textInput" placeholder="在这里输入你想转换为语音的文字…" maxlength="2000">你好，欢迎使用 Fish TTS 语音合成服务。</textarea>
-                <span class="char-count" id="charCount">0 / 2000</span>
-            </div>
-
-            <!-- 快捷语气标签 -->
-            <div class="tags-section">
-                <div class="tags-header">
-                    <span>快捷语气</span>
-                </div>
-                <div class="tags-scroll" id="tagsContainer">
-                    <!-- 标签由 JS 动态生成 -->
-                </div>
-            </div>
-
-            <!-- 错误面板（增强版） -->
-            <div class="error-panel" id="errorPanel">
-                <button class="error-close" id="errorClose" aria-label="关闭">✕</button>
-                <div class="error-title">
-                    <span>⚠ 合成失败</span>
-                    <span class="error-code" id="errorCode">—</span>
-                </div>
-                <div class="error-detail" id="errorDetail"></div>
-                <div class="error-hint" id="errorHint"></div>
-            </div>
-
-            <div class="btn-group">
-                <button class="btn btn-primary" id="generateBtn">生成语音</button>
-                <button class="btn btn-secondary" id="clearBtn">清空</button>
-            </div>
-
-            <div class="loading" id="loading">
-                <div class="spinner"></div>
-                <span>正在合成语音…</span>
-            </div>
-
-            <div class="audio-section" id="audioSection">
-                <div class="audio-label">合成结果</div>
-                <audio id="audioPlayer" controls preload="auto"></audio>
-                <a class="download-link" id="downloadLink" download="fish-tts-output.mp3">⬇ 下载音频文件</a>
-            </div>
-        </div>
-
-        <div class="footer">
-            <p>Powered by Fish Audio</p>
-        </div>
+  <div class="phone-frame" id="app">
+    <!-- 状态栏 -->
+    <div class="status-bar">
+      <span>9:41</span>
+      <span>📶 🔋</span>
     </div>
 
-    <script>
-        (function() {
-            'use strict';
+    <!-- 顶部操作栏 -->
+    <div class="app-bar">
+      <h1>图片编辑器</h1>
+      <div class="actions">
+        <button class="btn btn-sm" id="importBtn" title="导入图片">📁 导入</button>
+        <button class="btn btn-primary" id="exportBtn" title="导出图片">导出</button>
+      </div>
+    </div>
 
-            // ============================================================
-            // 配置区
-            // ============================================================
-            const API_KEY = 'sk-fish-WRH7EM2k6drv5nBSkHFW0KJt0cBVL35Zb5zWHzr0D58';  // ← 替换为你的 API Key
-            const API_URL = 'https://api.fish.audio/v1/tts';
+    <!-- 图片嵌入字体演示（小） -->
+    <div class="demo-embed">
+      <span class="label">图片嵌入字体</span>
+      <span class="sample">TEXT</span>
+    </div>
 
-            // ============================================================
-            // 快捷语气标签数据
-            // ============================================================
-            const EMOTION_TAGS = [
-                { en: '[happy]', cn: '开心' },
-                { en: '[sad]', cn: '悲伤' },
-                { en: '[angry]', cn: '愤怒' },
-                { en: '[excited]', cn: '兴奋' },
-                { en: '[calm]', cn: '平静' },
-                { en: '[nervous]', cn: '紧张' },
-                { en: '[confident]', cn: '自信' },
-                { en: '[surprised]', cn: '惊讶' },
-                { en: '[whispering]', cn: '耳语' },
-                { en: '[shouting]', cn: '喊叫' },
-                { en: '[soft tone]', cn: '温柔' },
-                { en: '[laughing]', cn: '笑声' },
-                { en: '[sighing]', cn: '叹气' },
-                { en: '[break]', cn: '短暂停顿' },
-                { en: '[long-break]', cn: '长停顿' }
-            ];
+    <!-- 编辑器画布 -->
+    <div class="editor-stage" id="editorStage">
+      <div class="canvas-wrap" id="canvasWrap">
+        <img id="bgImage" alt="背景图片" style="display: none;">
+        <div class="placeholder" id="placeholder">
+          <div class="icon">🖼️</div>
+          <div class="text">点击“导入”按钮<br>选择一张图片开始编辑</div>
+        </div>
+        <!-- 覆盖层：存放所有可拖拽元素 -->
+        <div class="overlay-layer" id="overlayLayer"></div>
+      </div>
+    </div>
 
-            // ============================================================
-            // 常见错误码中文解释
-            // ============================================================
-            const ERROR_HINTS = {
-                400: '请求参数有误，请检查输入文字、模型名或音色 ID 格式。',
-                401: 'API Key 无效或已过期，请到 Fish Audio 控制台重新生成。',
-                403: '没有权限访问该资源，可能是模型或音色 ID 未授权。',
-                404: '接口或音色 ID 不存在，请检查音色 ID 是否正确。',
-                422: '请求体格式错误，可能是参数类型或字段名不匹配。',
-                429: '请求过于频繁或额度已用完，请稍后重试或升级套餐。',
-                500: 'Fish Audio 服务器内部错误，请稍后重试。',
-                502: '网关错误，Fish Audio 服务可能正在维护。',
-                503: '服务暂时不可用，请稍后重试。',
-                504: '网关超时，可能是文本过长或网络不稳定。'
-            };
+    <!-- 底部工具栏 -->
+    <div class="toolbar">
+      <div class="tool-row">
+        <button class="tool-btn" id="addTextBtn" disabled>
+          <span class="ico">T</span>
+          <span>文字</span>
+        </button>
+        <button class="tool-btn" id="addBubbleBtn" disabled>
+          <span class="ico">💬</span>
+          <span>对话框</span>
+        </button>
+        <button class="tool-btn" id="deleteSelectedBtn" disabled>
+          <span class="ico">🗑️</span>
+          <span>删除</span>
+        </button>
+        <button class="tool-btn" id="resetBtn" disabled>
+          <span class="ico">↺</span>
+          <span>清空</span>
+        </button>
+      </div>
 
-            // ============================================================
-            // DOM 引用
-            // ============================================================
-            const textInput = document.getElementById('textInput');
-            const charCount = document.getElementById('charCount');
-            const generateBtn = document.getElementById('generateBtn');
-            const clearBtn = document.getElementById('clearBtn');
-            const loading = document.getElementById('loading');
-            const audioSection = document.getElementById('audioSection');
-            const audioPlayer = document.getElementById('audioPlayer');
-            const downloadLink = document.getElementById('downloadLink');
-            const errorPanel = document.getElementById('errorPanel');
-            const errorCode = document.getElementById('errorCode');
-            const errorDetail = document.getElementById('errorDetail');
-            const errorHint = document.getElementById('errorHint');
-            const errorClose = document.getElementById('errorClose');
-            const modelSelect = document.getElementById('modelSelect');
-            const tagsContainer = document.getElementById('tagsContainer');
-            const voiceIdInput = document.getElementById('voiceIdInput');
+      <!-- 颜色选择 -->
+      <div class="color-row" id="colorRow">
+        <div class="color-dot active" data-color="#ffffff" style="background:#ffffff;"></div>
+        <div class="color-dot" data-color="#000000" style="background:#000000;"></div>
+        <div class="color-dot" data-color="#ff4757" style="background:#ff4757;"></div>
+        <div class="color-dot" data-color="#2ed573" style="background:#2ed573;"></div>
+        <div class="color-dot" data-color="#3b7cff" style="background:#3b7cff;"></div>
+        <div class="color-dot" data-color="#feca57" style="background:#feca57;"></div>
+        <div class="color-dot" data-color="#a55eea" style="background:#a55eea;"></div>
+      </div>
 
-            let currentAudioUrl = null;
+      <!-- 字体大小 -->
+      <div class="size-row">
+        <span>字号</span>
+        <input type="range" id="fontSizeSlider" min="12" max="72" value="22" step="1" disabled>
+        <span class="val" id="fontSizeVal">22</span>
+      </div>
+    </div>
 
-            // ============================================================
-            // 渲染快捷标签
-            // ============================================================
-            function renderTags() {
-                tagsContainer.innerHTML = '';
-                EMOTION_TAGS.forEach(function(tag) {
-                    const btn = document.createElement('button');
-                    btn.className = 'tag-btn';
-                    btn.innerHTML = '<span class="tag-en">' + tag.en + '</span><span class="tag-cn">' + tag.cn + '</span>';
-                    btn.addEventListener('click', function() {
-                        insertTagAtCursor(tag.en);
-                    });
-                    tagsContainer.appendChild(btn);
-                });
+    <!-- Home Indicator -->
+    <div class="home-indicator"></div>
+
+    <!-- 隐藏的文件输入 -->
+    <input type="file" id="fileInput" accept="image/*">
+
+    <!-- Toast 提示 -->
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <script>
+    (function() {
+      // ============ DOM 引用 ============
+      const bgImage = document.getElementById('bgImage');
+      const placeholder = document.getElementById('placeholder');
+      const overlayLayer = document.getElementById('overlayLayer');
+      const importBtn = document.getElementById('importBtn');
+      const exportBtn = document.getElementById('exportBtn');
+      const fileInput = document.getElementById('fileInput');
+      const addTextBtn = document.getElementById('addTextBtn');
+      const addBubbleBtn = document.getElementById('addBubbleBtn');
+      const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
+      const resetBtn = document.getElementById('resetBtn');
+      const fontSizeSlider = document.getElementById('fontSizeSlider');
+      const fontSizeVal = document.getElementById('fontSizeVal');
+      const colorRow = document.getElementById('colorRow');
+      const toast = document.getElementById('toast');
+      const editorStage = document.getElementById('editorStage');
+
+      // ============ 状态 ============
+      let selectedItem = null;         // 当前选中的可拖拽元素
+      let currentColor = '#ffffff';    // 当前选中的颜色（用于新添加或更新选中元素）
+      let currentFontSize = 22;
+      let itemIdCounter = 0;
+
+      // ============ 工具函数 ============
+      function showToast(msg, duration = 1800) {
+        toast.textContent = msg;
+        toast.classList.add('show');
+        clearTimeout(toast._timer);
+        toast._timer = setTimeout(() => {
+          toast.classList.remove('show');
+        }, duration);
+      }
+
+      // 取消所有选中
+      function deselectAll() {
+        document.querySelectorAll('.draggable-item.selected').forEach(el => {
+          el.classList.remove('selected');
+          el.blur();
+        });
+        selectedItem = null;
+        updateToolbarState();
+      }
+
+      // 选中某个元素
+      function selectItem(el) {
+        if (selectedItem === el) return;
+        deselectAll();
+        if (el) {
+          el.classList.add('selected');
+          selectedItem = el;
+          // 同步字体大小滑块和颜色
+          if (el.dataset.type === 'text' || el.dataset.type === 'bubble') {
+            const fs = parseInt(el.dataset.fontSize || '22', 10);
+            currentFontSize = fs;
+            fontSizeSlider.value = fs;
+            fontSizeVal.textContent = fs;
+            fontSizeSlider.disabled = false;
+          }
+          if (el.dataset.color) {
+            currentColor = el.dataset.color;
+            updateColorDots(el.dataset.color);
+          }
+        } else {
+          fontSizeSlider.disabled = true;
+          updateColorDots(currentColor);
+        }
+        updateToolbarState();
+      }
+
+      // 更新颜色圆点激活状态
+      function updateColorDots(color) {
+        document.querySelectorAll('.color-dot').forEach(dot => {
+          dot.classList.toggle('active', dot.dataset.color === color);
+        });
+      }
+
+      // 更新工具栏按钮状态
+      function updateToolbarState() {
+        const hasImage = bgImage.style.display !== 'none' && bgImage.src;
+        addTextBtn.disabled = !hasImage;
+        addBubbleBtn.disabled = !hasImage;
+        resetBtn.disabled = !hasImage;
+        deleteSelectedBtn.disabled = !selectedItem;
+        if (!selectedItem) {
+          fontSizeSlider.disabled = true;
+        }
+      }
+
+      // 生成唯一 ID
+      function genId() {
+        return 'item_' + (++itemIdCounter) + '_' + Date.now();
+      }
+
+      // ============ 拖拽核心逻辑（Pointer Events） ============
+      function makeDraggable(el) {
+        let startX = 0, startY = 0;
+        let startLeft = 0, startTop = 0;
+        let isDragging = false;
+        let hasMoved = false;
+
+        el.addEventListener('pointerdown', (e) => {
+          // 如果点的是删除按钮或缩放手柄，不触发拖拽
+          if (e.target.closest('.delete-btn') || e.target.closest('.resize-handle')) return;
+          if (el.querySelector('.editing')) return; // 正在编辑文本时不拖拽
+
+          e.preventDefault();
+          // 选中
+          selectItem(el);
+
+          // 记录起始位置
+          const rect = el.getBoundingClientRect();
+          const stageRect = editorStage.getBoundingClientRect();
+
+          // 计算相对 stage 的偏移
+          startLeft = rect.left - stageRect.left;
+          startTop = rect.top - stageRect.top;
+          startX = e.clientX;
+          startY = e.clientY;
+          isDragging = true;
+          hasMoved = false;
+
+          el.setPointerCapture(e.pointerId);
+          el.style.cursor = 'grabbing';
+        });
+
+        el.addEventListener('pointermove', (e) => {
+          if (!isDragging) return;
+          e.preventDefault();
+
+          const dx = e.clientX - startX;
+          const dy = e.clientY - startY;
+
+          if (Math.abs(dx) > 2 || Math.abs(dy) > 2) hasMoved = true;
+
+          let newLeft = startLeft + dx;
+          let newTop = startTop + dy;
+
+          // 限制在 stage 内（可稍微超出一点，但保持可见）
+          const stageRect = editorStage.getBoundingClientRect();
+          const elRect = el.getBoundingClientRect();
+          const maxLeft = stageRect.width - elRect.width + 20;
+          const maxTop = stageRect.height - elRect.height + 20;
+
+          newLeft = Math.max(-10, Math.min(newLeft, maxLeft));
+          newTop = Math.max(-10, Math.min(newTop, maxTop));
+
+          el.style.left = newLeft + 'px';
+          el.style.top = newTop + 'px';
+          // 确保使用绝对定位
+          el.style.position = 'absolute';
+        });
+
+        el.addEventListener('pointerup', (e) => {
+          if (!isDragging) return;
+          isDragging = false;
+          el.style.cursor = 'grab';
+          try { el.releasePointerCapture(e.pointerId); } catch (_) {}
+        });
+
+        el.addEventListener('pointercancel', (e) => {
+          isDragging = false;
+          el.style.cursor = 'grab';
+        });
+
+        // 双击编辑文本
+        el.addEventListener('dblclick', (e) => {
+          if (el.dataset.type === 'text' || el.dataset.type === 'bubble') {
+            e.stopPropagation();
+            startEditing(el);
+          }
+        });
+
+        // 移动端双击（用 touch 模拟）
+        let lastTap = 0;
+        el.addEventListener('touchend', (e) => {
+          const now = Date.now();
+          if (now - lastTap < 300) {
+            e.preventDefault();
+            if (el.dataset.type === 'text' || el.dataset.type === 'bubble') {
+              startEditing(el);
             }
+          }
+          lastTap = now;
+        }, { passive: false });
+      }
 
-            function insertTagAtCursor(tagText) {
-                const start = textInput.selectionStart;
-                const end = textInput.selectionEnd;
-                const before = textInput.value.substring(0, start);
-                const after = textInput.value.substring(end);
-                textInput.value = before + tagText + ' ' + after;
+      // 开始编辑文本
+      function startEditing(el) {
+        if (el.querySelector('.editing')) return;
+        const contentEl = el.querySelector('.content') || el;
+        const originalText = contentEl.innerText || contentEl.textContent || '';
+        const type = el.dataset.type;
 
-                const newPos = start + tagText.length + 1;
-                textInput.setSelectionRange(newPos, newPos);
+        // 创建一个可编辑的 span
+        const editor = document.createElement('div');
+        editor.className = 'editing';
+        editor.contentEditable = 'true';
+        editor.style.outline = 'none';
+        editor.style.minWidth = '20px';
+        editor.textContent = originalText;
 
-                updateCharCount();
-                textInput.focus();
+        // 保存原始内容
+        contentEl.style.display = 'none';
+        el.appendChild(editor);
+        editor.focus();
+
+        // 选中全部文本
+        const range = document.createRange();
+        range.selectNodeContents(editor);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+
+        // 完成编辑
+        function finishEditing() {
+          const newText = editor.innerText || editor.textContent || '';
+          contentEl.textContent = newText;
+          contentEl.style.display = '';
+          editor.remove();
+          // 更新数据
+          el.dataset.text = newText;
+          // 重新绑定内容元素
+          if (el.dataset.type === 'bubble') {
+            // 对话框内容更新
+          }
+        }
+
+        editor.addEventListener('blur', finishEditing);
+        editor.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            editor.blur();
+          }
+          if (e.key === 'Escape') {
+            editor.textContent = originalText;
+            editor.blur();
+          }
+        });
+      }
+
+      // ============ 添加元素 ============
+      function addTextBlock(x, y, text = '双击编辑文字', color = currentColor, fontSize = currentFontSize) {
+        const id = genId();
+        const el = document.createElement('div');
+        el.className = 'draggable-item text-block';
+        el.dataset.id = id;
+        el.dataset.type = 'text';
+        el.dataset.color = color;
+        el.dataset.fontSize = fontSize;
+        el.dataset.text = text;
+        el.style.left = (x || 30) + 'px';
+        el.style.top = (y || 30) + 'px';
+        el.style.color = color;
+        el.style.fontSize = fontSize + 'px';
+
+        // 内容元素
+        const content = document.createElement('div');
+        content.className = 'content';
+        content.textContent = text;
+        content.style.pointerEvents = 'none';
+        el.appendChild(content);
+
+        // 删除按钮
+        const delBtn = document.createElement('div');
+        delBtn.className = 'delete-btn';
+        delBtn.textContent = '×';
+        delBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (confirm('删除这个文字？')) {
+            el.remove();
+            if (selectedItem === el) {
+              selectedItem = null;
+              updateToolbarState();
             }
+          }
+        });
+        el.appendChild(delBtn);
 
-            function updateCharCount() {
-                const len = textInput.value.length;
-                charCount.textContent = len + ' / 2000';
+        // 缩放手柄
+        const resizeHandle = document.createElement('div');
+        resizeHandle.className = 'resize-handle';
+        setupResize(el, resizeHandle, 'fontSize');
+        el.appendChild(resizeHandle);
+
+        // 拖拽
+        makeDraggable(el);
+
+        // 点击选中
+        el.addEventListener('pointerdown', (e) => {
+          if (e.target.closest('.delete-btn') || e.target.closest('.resize-handle') || e.target.closest('.editing')) return;
+          selectItem(el);
+        });
+
+        overlayLayer.appendChild(el);
+        selectItem(el);
+        return el;
+      }
+
+      function addBubbleBlock(x, y, text = '对话内容', color = currentColor, fontSize = currentFontSize) {
+        const id = genId();
+        const el = document.createElement('div');
+        el.className = 'draggable-item bubble-block';
+        el.dataset.id = id;
+        el.dataset.type = 'bubble';
+        el.dataset.color = color;
+        el.dataset.fontSize = fontSize;
+        el.dataset.text = text;
+        el.style.left = (x || 50) + 'px';
+        el.style.top = (y || 50) + 'px';
+        el.style.color = color;
+        el.style.fontSize = fontSize + 'px';
+        // 对话框背景色默认使用浅色，文字颜色自动对比
+        el.style.background = '#ffffff';
+        el.style.color = '#1a1d21';
+
+        // 根据选择的颜色决定文字颜色
+        const applyBubbleStyle = (bgColor) => {
+          // 简单亮度判断
+          const hex = bgColor.replace('#', '');
+          const r = parseInt(hex.substr(0, 2), 16);
+          const g = parseInt(hex.substr(2, 2), 16);
+          const b = parseInt(hex.substr(4, 2), 16);
+          const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+          el.style.background = bgColor;
+          el.style.color = brightness > 128 ? '#1a1d21' : '#ffffff';
+          // 尾巴颜色跟随背景
+          el.style.setProperty('--bubble-bg', bgColor);
+        };
+        applyBubbleStyle(color);
+        el.dataset.color = color;
+
+        // 内容
+        const content = document.createElement('div');
+        content.className = 'content';
+        content.textContent = text;
+        content.style.pointerEvents = 'none';
+        el.appendChild(content);
+
+        // 删除按钮
+        const delBtn = document.createElement('div');
+        delBtn.className = 'delete-btn';
+        delBtn.textContent = '×';
+        delBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (confirm('删除这个对话框？')) {
+            el.remove();
+            if (selectedItem === el) {
+              selectedItem = null;
+              updateToolbarState();
             }
+          }
+        });
+        el.appendChild(delBtn);
 
-            textInput.addEventListener('input', updateCharCount);
-            updateCharCount();
-            renderTags();
+        // 缩放手柄
+        const resizeHandle = document.createElement('div');
+        resizeHandle.className = 'resize-handle';
+        setupResize(el, resizeHandle, 'fontSize');
+        el.appendChild(resizeHandle);
 
-            // ============================================================
-            // 错误面板控制
-            // ============================================================
-            function showError(code, detail, hint) {
-                errorCode.textContent = code || '—';
-                errorDetail.textContent = detail || '未知错误';
-                errorHint.textContent = hint || '';
-                errorHint.style.display = hint ? 'block' : 'none';
-                errorPanel.classList.add('visible');
-            }
+        makeDraggable(el);
 
-            function hideError() {
-                errorPanel.classList.remove('visible');
-            }
+        el.addEventListener('pointerdown', (e) => {
+          if (e.target.closest('.delete-btn') || e.target.closest('.resize-handle') || e.target.closest('.editing')) return;
+          selectItem(el);
+        });
 
-            errorClose.addEventListener('click', hideError);
+        overlayLayer.appendChild(el);
+        selectItem(el);
+        return el;
+      }
 
-            // ============================================================
-            // 工具函数
-            // ============================================================
-            function setLoading(isLoading) {
-                if (isLoading) {
-                    loading.classList.add('visible');
-                    generateBtn.disabled = true;
-                    generateBtn.textContent = '合成中…';
-                } else {
-                    loading.classList.remove('visible');
-                    generateBtn.disabled = false;
-                    generateBtn.textContent = '生成语音';
-                }
-            }
+      // 设置缩放（字号）
+      function setupResize(el, handle, prop = 'fontSize') {
+        let startX = 0, startY = 0, startSize = 0;
 
-            function revokeOldUrl() {
-                if (currentAudioUrl) { URL.revokeObjectURL(currentAudioUrl); currentAudioUrl = null; }
-            }
+        handle.addEventListener('pointerdown', (e) => {
+          e.stopPropagation();
+          e.preventDefault();
+          startX = e.clientX;
+          startY = e.clientY;
+          startSize = parseInt(el.dataset.fontSize || '22', 10);
+          handle.setPointerCapture(e.pointerId);
+        });
 
-            // ============================================================
-            // 从响应中提取错误信息（兼容多种返回结构）
-            // ============================================================
-            async function extractErrorInfo(response) {
-                let detail = response.statusText || '请求失败';
-                try {
-                    const contentType = response.headers.get('content-type') || '';
-                    if (contentType.includes('application/json')) {
-                        const body = await response.json();
-                        // 兼容常见字段
-                        if (body) {
-                            if (typeof body === 'string') {
-                                detail = body;
-                            } else if (body.message) {
-                                detail = body.message;
-                            } else if (body.detail) {
-                                detail = typeof body.detail === 'string' ? body.detail : JSON.stringify(body.detail);
-                            } else if (body.error) {
-                                detail = typeof body.error === 'string' ? body.error : JSON.stringify(body.error);
-                            } else {
-                                detail = JSON.stringify(body);
-                            }
-                        }
-                    } else {
-                        const text = await response.text();
-                        if (text) detail = text.substring(0, 300);
-                    }
-                } catch (e) {
-                    // 解析失败时使用 statusText
-                }
-                return detail;
-            }
+        handle.addEventListener('pointermove', (e) => {
+          if (!handle.hasPointerCapture(e.pointerId)) return;
+          e.preventDefault();
+          const dx = e.clientX - startX;
+          const dy = e.clientY - startY;
+          const delta = Math.max(dx, dy) / 2;
+          let newSize = Math.round(startSize + delta);
+          newSize = Math.max(12, Math.min(96, newSize));
+          el.dataset.fontSize = newSize;
+          el.style.fontSize = newSize + 'px';
+          // 如果是对话框，也需要调整
+          if (el.dataset.type === 'bubble') {
+            el.style.fontSize = newSize + 'px';
+          }
+          // 同步滑块
+          if (selectedItem === el) {
+            fontSizeSlider.value = newSize;
+            fontSizeVal.textContent = newSize;
+            currentFontSize = newSize;
+          }
+        });
 
-            // ============================================================
-            // 核心合成逻辑
-            // ============================================================
-            async function generateSpeech() {
-                const text = textInput.value.trim();
-                const selectedModel = modelSelect.value;
-                const customVoiceId = voiceIdInput.value.trim();
+        handle.addEventListener('pointerup', (e) => {
+          try { handle.releasePointerCapture(e.pointerId); } catch (_) {}
+        });
+      }
 
-                if (!text) { showError('输入为空', '请输入要合成的文字内容。'); textInput.focus(); return; }
-                if (text.length > 2000) { showError('文本过长', '文字长度不能超过 2000 个字符，当前 ' + text.length + ' 字符。'); return; }
-                if (!API_KEY || API_KEY === 'YOUR_FISH_AUDIO_API_KEY') {
-                    showError('配置缺失', '请先在代码中填入你的 Fish Audio API Key。', '在代码顶部找到 API_KEY 常量并替换。');
-                    return;
-                }
+      // ============ 导入图片 ============
+      importBtn.addEventListener('click', () => {
+        fileInput.click();
+      });
 
-                hideError();
-                setLoading(true);
-                revokeOldUrl();
-                audioSection.classList.remove('visible');
-                audioPlayer.removeAttribute('src');
-                audioPlayer.load();
-
-                try {
-                    const payload = { text: text, format: 'mp3' };
-                    if (customVoiceId) {
-                        payload.reference_id = customVoiceId;
-                    }
-
-                    const response = await fetch(API_URL, {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': 'Bearer ' + API_KEY,
-                            'Content-Type': 'application/json',
-                            'model': selectedModel
-                        },
-                        body: JSON.stringify(payload)
-                    });
-
-                    // ---- 错误处理：显示具体状态码 ----
-                    if (!response.ok) {
-                        const detail = await extractErrorInfo(response);
-                        const codeStr = 'HTTP ' + response.status;
-                        const hint = ERROR_HINTS[response.status] || '';
-                        showError(codeStr, detail, hint);
-                        return;
-                    }
-
-                    const audioBlob = await response.blob();
-                    if (audioBlob.size === 0) {
-                        showError('空音频', 'API 返回了空音频数据，请检查输入内容或音色 ID。');
-                        return;
-                    }
-
-                    currentAudioUrl = URL.createObjectURL(audioBlob);
-                    audioPlayer.src = currentAudioUrl;
-                    downloadLink.href = currentAudioUrl;
-                    audioSection.classList.add('visible');
-
-                    try {
-                        await audioPlayer.play();
-                    } catch (playErr) {
-                        console.log('自动播放被阻止，用户可手动点击播放。');
-                    }
-
-                } catch (err) {
-                    // ---- 网络层错误（无 HTTP 状态码）----
-                    console.error('TTS 合成错误:', err);
-                    let code = '网络错误';
-                    let detail = err.message || '未知错误';
-                    let hint = '请检查网络连接、API 地址是否正确，或浏览器是否拦截了跨域请求。';
-                    if (err.name === 'AbortError') {
-                        code = '请求中断';
-                        hint = '请求被取消，请重试。';
-                    } else if (err.name === 'TypeError' && /fetch/i.test(err.message)) {
-                        code = '网络/CORS';
-                        hint = '无法连接到 API 服务器，可能是网络问题或跨域限制。';
-                    }
-                    showError(code, detail, hint);
-                } finally {
-                    setLoading(false);
-                }
-            }
-
-            // ============================================================
-            // 事件绑定
-            // ============================================================
-            generateBtn.addEventListener('click', generateSpeech);
-
-            clearBtn.addEventListener('click', function() {
-                textInput.value = '';
-                voiceIdInput.value = '';
-                updateCharCount();
-                hideError();
-                revokeOldUrl();
-                audioSection.classList.remove('visible');
-                audioPlayer.removeAttribute('src');
-                audioPlayer.load();
-                textInput.focus();
-            });
-
-            textInput.addEventListener('keydown', function(e) {
-                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); generateSpeech(); }
-            });
-
-            window.addEventListener('beforeunload', revokeOldUrl);
-        })();
-    </script>
-</body>
-</html>
+      fileInput.addEventListener('change', (e) => {
+        const
