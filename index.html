@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>我的小网站</title>
+
+  <!-- 引入网络字体：思源宋体（手机也能正常显示） -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* ===== 全局字体设置 ===== */
+    body {
+      font-family: 'Noto Serif SC', 'PingFang SC', 'Microsoft YaHei', serif;
+      font-size: 17px;
+      line-height: 1.8;
+      color: #333;
+      background: #fafafa;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 680px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 24px 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+
+    /* ===== 标题字体 ===== */
+    h1 {
+      font-family: 'Noto Serif SC', serif;
+      font-weight: 700;
+      font-size: 24px;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #888;
+      font-size: 14px;
+      margin-bottom: 28px;
+    }
+
+    /* ===== 图片样式 ===== */
+    .post-img {
+      width: 100%;
+      height: auto;
+      border-radius: 10px;
+      display: block;
+      margin: 16px 0;
+    }
+
+    /* ===== 正文段落 ===== */
+    p {
+      margin: 14px 0;
+      text-align: justify;
+    }
+
+    /* ===== 自定义字体示例 ===== */
+    .custom-font {
+      font-family: 'Noto Serif SC', serif;
+      font-weight: 700;
+      color: #b8860b;
+    }
+
+    /* 手机端微调 */
+    @media (max-width: 480px) {
+      body { padding: 12px; font-size: 16px; }
+      .container { padding: 18px 14px; }
+      h1 { font-size: 21px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>我的手机小站</h1>
+    <p class="subtitle">用 GitHub Pages 搭建 · 支持图片与自定义字体</p>
+
+    <!-- 插入图片：把图片文件放进仓库，路径写 ./图片名.jpg -->
+    <img class="post-img" src="./cover.jpg" alt="封面图">
+
+    <p>这是一段普通正文。手机浏览器打开后会自动适配屏幕宽度，字体使用思源宋体，阅读起来比较舒服。</p>
+
+    <p class="custom-font">这一行用了加粗的思源宋体，颜色也做了自定义。</p>
+
+    <!-- 再插一张图片 -->
+    <img class="post-img" src="./photo2.jpg" alt="第二张图">
+
+    <p>你可以继续添加文字和图片，保存后 GitHub Pages 会自动更新。</p>
+  </div>
+
+</body>
+</html>
