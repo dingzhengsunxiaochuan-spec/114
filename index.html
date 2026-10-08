@@ -49,6 +49,26 @@
         .model-selector select:focus { border-color: #6c5ce7; }
         .model-selector select option { background: #1a1a24; color: #ccc; }
 
+        /* 音色 ID 输入区 */
+        .voice-id-section {
+            display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-shrink: 0;
+        }
+        .voice-id-section label {
+            font-size: 12px; color: #666; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+        .voice-id-section input {
+            flex: 1; background: #1a1a24; border: 1.5px solid #2a2a3a; border-radius: 10px;
+            padding: 10px 12px; color: #ccc; font-size: 13px; outline: none; font-family: inherit;
+            transition: border-color 0.25s ease, box-shadow 0.25s ease;
+        }
+        .voice-id-section input:focus {
+            border-color: #6c5ce7; box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.15);
+        }
+        .voice-id-section input::placeholder {
+            color: #444; font-size: 12px;
+        }
+
         .textarea-wrapper { position: relative; flex: 1; min-height: 100px; margin-bottom: 12px; }
         textarea {
             width: 100%; height: 100%; background: #1a1a24; border: 1.5px solid #2a2a3a;
@@ -62,10 +82,7 @@
             position: absolute; bottom: 10px; right: 14px; font-size: 11px; color: #444; pointer-events: none;
         }
 
-        /* 快捷语气标签区 */
-        .tags-section {
-            flex-shrink: 0; margin-bottom: 12px;
-        }
+        .tags-section { flex-shrink: 0; margin-bottom: 12px; }
         .tags-header {
             display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;
         }
@@ -155,10 +172,17 @@
                 <label>模型</label>
                 <select id="modelSelect">
                     <option value="s2.1-pro">s2.1-pro（推荐 · 高质量）</option>
+                    <option value="s2.1-pro-free">s2.1-pro-free（免费 · 基础质量）</option>
                     <option value="s2.1-pro-flash">s2.1-pro-flash（快速 · 低消耗）</option>
                     <option value="s2-pro">s2-pro（多说话人 · 表达控制）</option>
                     <option value="s1">s1（经典模型）</option>
                 </select>
+            </div>
+
+            <!-- 音色 ID 输入 -->
+            <div class="voice-id-section">
+                <label for="voiceIdInput">音色 ID</label>
+                <input type="text" id="voiceIdInput" placeholder="留空使用默认音色，可填入 Fish Audio 声音 ID">
             </div>
 
             <div class="textarea-wrapper">
@@ -209,10 +233,9 @@
             // ============================================================
             const API_KEY = 'sk-fish-WRH7EM2k6drv5nBSkHFW0KJt0cBVL35Zb5zWHzr0D58';  // ← 替换为你的 API Key
             const API_URL = 'https://api.fish.audio/v1/tts';
-            const REFERENCE_ID = '';  // 可选：填入声音 ID
 
             // ============================================================
-            // 快捷语气标签数据（英文标签 + 中文翻译）
+            // 快捷语气标签数据
             // ============================================================
             const EMOTION_TAGS = [
                 { en: '[happy]', cn: '开心' },
@@ -246,6 +269,7 @@
             const errorToast = document.getElementById('errorToast');
             const modelSelect = document.getElementById('modelSelect');
             const tagsContainer = document.getElementById('tagsContainer');
+            const voiceIdInput = document.getElementById('voiceIdInput');
 
             let currentAudioUrl = null;
 
@@ -275,11 +299,9 @@
                 const after = textInput.value.substring(end);
                 textInput.value = before + tagText + ' ' + after;
 
-                // 更新光标位置
                 const newPos = start + tagText.length + 1;
                 textInput.setSelectionRange(newPos, newPos);
 
-                // 触发计数更新
                 updateCharCount();
                 textInput.focus();
             }
@@ -326,6 +348,7 @@
             async function generateSpeech() {
                 const text = textInput.value.trim();
                 const selectedModel = modelSelect.value;
+                const customVoiceId = voiceIdInput.value.trim();
 
                 if (!text) { showError('请输入要合成的文字内容。'); textInput.focus(); return; }
                 if (text.length > 2000) { showError('文字长度不能超过 2000 个字符。'); return; }
@@ -342,7 +365,10 @@
 
                 try {
                     const payload = { text: text, format: 'mp3' };
-                    if (REFERENCE_ID) { payload.reference_id = REFERENCE_ID; }
+                    // 优先使用输入框中的自定义音色 ID
+                    if (customVoiceId) {
+                        payload.reference_id = customVoiceId;
+                    }
 
                     const response = await fetch(API_URL, {
                         method: 'POST',
@@ -391,6 +417,7 @@
 
             clearBtn.addEventListener('click', function() {
                 textInput.value = '';
+                voiceIdInput.value = '';
                 updateCharCount();
                 hideError();
                 revokeOldUrl();
