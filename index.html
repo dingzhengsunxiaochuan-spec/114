@@ -49,7 +49,6 @@
         .model-selector select:focus { border-color: #6c5ce7; }
         .model-selector select option { background: #1a1a24; color: #ccc; }
 
-        /* 音色 ID 输入区 */
         .voice-id-section {
             display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-shrink: 0;
         }
@@ -65,9 +64,7 @@
         .voice-id-section input:focus {
             border-color: #6c5ce7; box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.15);
         }
-        .voice-id-section input::placeholder {
-            color: #444; font-size: 12px;
-        }
+        .voice-id-section input::placeholder { color: #444; font-size: 12px; }
 
         .textarea-wrapper { position: relative; flex: 1; min-height: 100px; margin-bottom: 12px; }
         textarea {
@@ -143,12 +140,57 @@
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        .error-toast {
-            display: none; background: rgba(220, 60, 60, 0.15); border: 1px solid rgba(220, 60, 60, 0.3);
-            color: #e88; border-radius: 12px; padding: 10px 14px; font-size: 12px; margin-bottom: 12px; line-height: 1.5;
+        /* 错误面板（增强版） */
+        .error-panel {
+            display: none;
+            background: rgba(220, 60, 60, 0.12);
+            border: 1px solid rgba(220, 60, 60, 0.35);
+            border-radius: 12px;
+            padding: 12px 14px;
+            font-size: 12px;
+            margin-bottom: 12px;
+            line-height: 1.6;
+            position: relative;
         }
-        .error-toast.visible { display: block; animation: fadeIn 0.25s ease; }
+        .error-panel.visible { display: block; animation: fadeIn 0.25s ease; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .error-panel .error-title {
+            display: flex; align-items: center; gap: 6px;
+            color: #f08080; font-weight: 700; margin-bottom: 6px; font-size: 13px;
+        }
+        .error-panel .error-code {
+            display: inline-block;
+            background: rgba(220, 60, 60, 0.25);
+            color: #ff9e9e;
+            font-family: monospace;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        .error-panel .error-detail {
+            color: #d99;
+            word-break: break-word;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+        .error-panel .error-hint {
+            color: #a77;
+            font-size: 11px;
+            margin-top: 6px;
+            padding-top: 6px;
+            border-top: 1px dashed rgba(220, 60, 60, 0.25);
+        }
+        .error-panel .error-close {
+            position: absolute;
+            top: 8px; right: 10px;
+            background: none; border: none;
+            color: #a77; font-size: 16px; cursor: pointer;
+            line-height: 1; padding: 4px;
+        }
+        .error-panel .error-close:active { color: #f08080; }
 
         .footer { flex-shrink: 0; text-align: center; padding-top: 12px; border-top: 1px solid #1e1e2a; margin-top: auto; }
         .footer p { font-size: 10px; color: #333; letter-spacing: 0.5px; }
@@ -200,7 +242,16 @@
                 </div>
             </div>
 
-            <div class="error-toast" id="errorToast"></div>
+            <!-- 错误面板（增强版） -->
+            <div class="error-panel" id="errorPanel">
+                <button class="error-close" id="errorClose" aria-label="关闭">✕</button>
+                <div class="error-title">
+                    <span>⚠ 合成失败</span>
+                    <span class="error-code" id="errorCode">—</span>
+                </div>
+                <div class="error-detail" id="errorDetail"></div>
+                <div class="error-hint" id="errorHint"></div>
+            </div>
 
             <div class="btn-group">
                 <button class="btn btn-primary" id="generateBtn">生成语音</button>
@@ -256,6 +307,22 @@
             ];
 
             // ============================================================
+            // 常见错误码中文解释
+            // ============================================================
+            const ERROR_HINTS = {
+                400: '请求参数有误，请检查输入文字、模型名或音色 ID 格式。',
+                401: 'API Key 无效或已过期，请到 Fish Audio 控制台重新生成。',
+                403: '没有权限访问该资源，可能是模型或音色 ID 未授权。',
+                404: '接口或音色 ID 不存在，请检查音色 ID 是否正确。',
+                422: '请求体格式错误，可能是参数类型或字段名不匹配。',
+                429: '请求过于频繁或额度已用完，请稍后重试或升级套餐。',
+                500: 'Fish Audio 服务器内部错误，请稍后重试。',
+                502: '网关错误，Fish Audio 服务可能正在维护。',
+                503: '服务暂时不可用，请稍后重试。',
+                504: '网关超时，可能是文本过长或网络不稳定。'
+            };
+
+            // ============================================================
             // DOM 引用
             // ============================================================
             const textInput = document.getElementById('textInput');
@@ -266,7 +333,11 @@
             const audioSection = document.getElementById('audioSection');
             const audioPlayer = document.getElementById('audioPlayer');
             const downloadLink = document.getElementById('downloadLink');
-            const errorToast = document.getElementById('errorToast');
+            const errorPanel = document.getElementById('errorPanel');
+            const errorCode = document.getElementById('errorCode');
+            const errorDetail = document.getElementById('errorDetail');
+            const errorHint = document.getElementById('errorHint');
+            const errorClose = document.getElementById('errorClose');
             const modelSelect = document.getElementById('modelSelect');
             const tagsContainer = document.getElementById('tagsContainer');
             const voiceIdInput = document.getElementById('voiceIdInput');
@@ -289,9 +360,6 @@
                 });
             }
 
-            // ============================================================
-            // 在光标处插入标签
-            // ============================================================
             function insertTagAtCursor(tagText) {
                 const start = textInput.selectionStart;
                 const end = textInput.selectionEnd;
@@ -306,9 +374,6 @@
                 textInput.focus();
             }
 
-            // ============================================================
-            // 字符计数
-            // ============================================================
             function updateCharCount() {
                 const len = textInput.value.length;
                 charCount.textContent = len + ' / 2000';
@@ -319,14 +384,25 @@
             renderTags();
 
             // ============================================================
+            // 错误面板控制
+            // ============================================================
+            function showError(code, detail, hint) {
+                errorCode.textContent = code || '—';
+                errorDetail.textContent = detail || '未知错误';
+                errorHint.textContent = hint || '';
+                errorHint.style.display = hint ? 'block' : 'none';
+                errorPanel.classList.add('visible');
+            }
+
+            function hideError() {
+                errorPanel.classList.remove('visible');
+            }
+
+            errorClose.addEventListener('click', hideError);
+
+            // ============================================================
             // 工具函数
             // ============================================================
-            function showError(msg) {
-                errorToast.textContent = msg;
-                errorToast.classList.add('visible');
-                setTimeout(function() { errorToast.classList.remove('visible'); }, 6000);
-            }
-            function hideError() { errorToast.classList.remove('visible'); }
             function setLoading(isLoading) {
                 if (isLoading) {
                     loading.classList.add('visible');
@@ -338,8 +414,42 @@
                     generateBtn.textContent = '生成语音';
                 }
             }
+
             function revokeOldUrl() {
                 if (currentAudioUrl) { URL.revokeObjectURL(currentAudioUrl); currentAudioUrl = null; }
+            }
+
+            // ============================================================
+            // 从响应中提取错误信息（兼容多种返回结构）
+            // ============================================================
+            async function extractErrorInfo(response) {
+                let detail = response.statusText || '请求失败';
+                try {
+                    const contentType = response.headers.get('content-type') || '';
+                    if (contentType.includes('application/json')) {
+                        const body = await response.json();
+                        // 兼容常见字段
+                        if (body) {
+                            if (typeof body === 'string') {
+                                detail = body;
+                            } else if (body.message) {
+                                detail = body.message;
+                            } else if (body.detail) {
+                                detail = typeof body.detail === 'string' ? body.detail : JSON.stringify(body.detail);
+                            } else if (body.error) {
+                                detail = typeof body.error === 'string' ? body.error : JSON.stringify(body.error);
+                            } else {
+                                detail = JSON.stringify(body);
+                            }
+                        }
+                    } else {
+                        const text = await response.text();
+                        if (text) detail = text.substring(0, 300);
+                    }
+                } catch (e) {
+                    // 解析失败时使用 statusText
+                }
+                return detail;
             }
 
             // ============================================================
@@ -350,10 +460,11 @@
                 const selectedModel = modelSelect.value;
                 const customVoiceId = voiceIdInput.value.trim();
 
-                if (!text) { showError('请输入要合成的文字内容。'); textInput.focus(); return; }
-                if (text.length > 2000) { showError('文字长度不能超过 2000 个字符。'); return; }
+                if (!text) { showError('输入为空', '请输入要合成的文字内容。'); textInput.focus(); return; }
+                if (text.length > 2000) { showError('文本过长', '文字长度不能超过 2000 个字符，当前 ' + text.length + ' 字符。'); return; }
                 if (!API_KEY || API_KEY === 'YOUR_FISH_AUDIO_API_KEY') {
-                    showError('请先在代码中填入你的 Fish Audio API Key。'); return;
+                    showError('配置缺失', '请先在代码中填入你的 Fish Audio API Key。', '在代码顶部找到 API_KEY 常量并替换。');
+                    return;
                 }
 
                 hideError();
@@ -365,7 +476,6 @@
 
                 try {
                     const payload = { text: text, format: 'mp3' };
-                    // 优先使用输入框中的自定义音色 ID
                     if (customVoiceId) {
                         payload.reference_id = customVoiceId;
                     }
@@ -380,31 +490,46 @@
                         body: JSON.stringify(payload)
                     });
 
+                    // ---- 错误处理：显示具体状态码 ----
                     if (!response.ok) {
-                        let errMsg = 'API 请求失败（状态码 ' + response.status + '）';
-                        try {
-                            const errBody = await response.json();
-                            if (errBody && errBody.message) errMsg += '：' + errBody.message;
-                            else if (errBody && errBody.detail) errMsg += '：' + errBody.detail;
-                        } catch (e) { /* ignore */ }
-                        throw new Error(errMsg);
+                        const detail = await extractErrorInfo(response);
+                        const codeStr = 'HTTP ' + response.status;
+                        const hint = ERROR_HINTS[response.status] || '';
+                        showError(codeStr, detail, hint);
+                        return;
                     }
 
                     const audioBlob = await response.blob();
-                    if (audioBlob.size === 0) throw new Error('返回的音频数据为空，请检查输入内容或 API 配置。');
+                    if (audioBlob.size === 0) {
+                        showError('空音频', 'API 返回了空音频数据，请检查输入内容或音色 ID。');
+                        return;
+                    }
 
                     currentAudioUrl = URL.createObjectURL(audioBlob);
                     audioPlayer.src = currentAudioUrl;
                     downloadLink.href = currentAudioUrl;
                     audioSection.classList.add('visible');
 
-                    try { await audioPlayer.play(); } catch (playErr) {
+                    try {
+                        await audioPlayer.play();
+                    } catch (playErr) {
                         console.log('自动播放被阻止，用户可手动点击播放。');
                     }
 
                 } catch (err) {
+                    // ---- 网络层错误（无 HTTP 状态码）----
                     console.error('TTS 合成错误:', err);
-                    showError('合成失败：' + err.message);
+                    let code = '网络错误';
+                    let detail = err.message || '未知错误';
+                    let hint = '请检查网络连接、API 地址是否正确，或浏览器是否拦截了跨域请求。';
+                    if (err.name === 'AbortError') {
+                        code = '请求中断';
+                        hint = '请求被取消，请重试。';
+                    } else if (err.name === 'TypeError' && /fetch/i.test(err.message)) {
+                        code = '网络/CORS';
+                        hint = '无法连接到 API 服务器，可能是网络问题或跨域限制。';
+                    }
+                    showError(code, detail, hint);
                 } finally {
                     setLoading(false);
                 }
