@@ -1,1076 +1,804 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>图片文字 · 对话框编辑器</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>图片文字 · 对话框编辑器</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body {
+    background:#0b0d10; min-height:100vh; display:flex; align-items:center; justify-content:center;
+    font-family: system-ui,-apple-system,'Segoe UI',Roboto,sans-serif; padding:12px; overflow:hidden;
+  }
+  .phone-frame {
+    width:390px; max-width:100%; height:780px; max-height:94vh; background:#111315;
+    border-radius:44px;
+    box-shadow: 0 30px 50px rgba(0,0,0,0.8), 0 0 0 8px #1e2023, 0 0 0 12px #2a2d31;
+    overflow:hidden; display:flex; flex-direction:column; position:relative;
+  }
+  .status-bar {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:14px 24px 8px 24px; color:#f0f0f0; font-size:15px; font-weight:500; flex-shrink:0;
+  }
+  .app-bar {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:4px 20px 12px 20px; flex-shrink:0;
+  }
+  .app-bar h1 { font-size:20px; font-weight:700; color:#f0f3f7; letter-spacing:-0.3px; }
+  .app-bar .actions { display:flex; gap:8px; }
+  .btn {
+    border:none; outline:none; cursor:pointer; font-family:inherit; font-weight:600;
+    border-radius:40px; transition:all .15s ease; display:inline-flex; align-items:center;
+    justify-content:center; gap:6px; user-select:none;
+  }
+  .btn:active { transform:scale(0.94); }
+  .btn-sm { padding:8px 14px; font-size:13px; background:#2c3138; color:#e0e6ed; }
+  .btn-sm:hover { background:#363c45; }
+  .btn-primary { background:#3b7cff; color:#fff; padding:10px 18px; font-size:14px;
+    box-shadow:0 4px 12px rgba(59,124,255,.4); }
+  .btn-primary:hover { background:#2e6bef; }
 
-    body {
-      background: #0b0d10;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-      padding: 12px;
-      overflow: hidden;
-    }
+  .editor-stage {
+    flex:1; position:relative; overflow:hidden; background:#0a0c0e;
+    margin:0 16px; border-radius:24px; border:1px solid #23272d;
+    display:flex; align-items:center; justify-content:center;
+    background-image:
+      linear-gradient(45deg,#14171b 25%,transparent 25%),
+      linear-gradient(-45deg,#14171b 25%,transparent 25%),
+      linear-gradient(45deg,transparent 75%,#14171b 75%),
+      linear-gradient(-45deg,transparent 75%,#14171b 75%);
+    background-size:20px 20px;
+    background-position:0 0,0 10px,10px -10px,-10px 0px;
+    background-color:#0f1114;
+  }
+  .canvas-wrap {
+    position:relative; max-width:100%; max-height:100%;
+    display:flex; align-items:center; justify-content:center;
+  }
+  #bgImage {
+    max-width:100%; max-height:100%; display:block; object-fit:contain;
+    pointer-events:none; border-radius:8px; box-shadow:0 8px 30px rgba(0,0,0,.6);
+  }
+  .placeholder {
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    color:#5a6371; gap:12px; padding:40px; text-align:center; pointer-events:none;
+  }
+  .placeholder .icon { font-size:52px; opacity:.6; }
+  .placeholder .text { font-size:14px; line-height:1.5; font-weight:500; }
 
-    /* 手机尺寸卡片 */
-    .phone-frame {
-      width: 390px;
-      max-width: 100%;
-      height: 780px;
-      max-height: 94vh;
-      background: #111315;
-      border-radius: 44px;
-      box-shadow:
-        0 30px 50px rgba(0, 0, 0, 0.8),
-        0 0 0 8px #1e2023,
-        0 0 0 12px #2a2d31;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      position: relative;
-    }
+  .overlay-layer {
+    position:absolute; top:0; left:0; width:100%; height:100%;
+    pointer-events:none; overflow:visible; border-radius:8px;
+  }
 
-    /* 状态栏 */
-    .status-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 14px 24px 8px 24px;
-      color: #f0f0f0;
-      font-size: 15px;
-      font-weight: 500;
-      flex-shrink: 0;
-    }
+  .draggable-item {
+    position:absolute; pointer-events:auto; cursor:grab;
+    user-select:none; touch-action:none; z-index:10;
+  }
+  .draggable-item:active { cursor:grabbing; }
+  .draggable-item.selected {
+    z-index:20;
+    box-shadow:0 0 0 2px #3b7cff, 0 0 0 4px rgba(59,124,255,.3);
+    border-radius:6px;
+  }
 
-    /* 顶部标题栏 */
-    .app-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 4px 20px 12px 20px;
-      flex-shrink: 0;
-    }
+  .text-block {
+    min-width:40px; padding:6px 10px; color:#fff; font-weight:700;
+    font-size:22px; line-height:1.25;
+    text-shadow:0 2px 8px rgba(0,0,0,.6);
+    white-space:pre-wrap; word-break:break-word; outline:none;
+    border-radius:6px; background:rgba(0,0,0,.15);
+    backdrop-filter:blur(2px); border:1px dashed rgba(255,255,255,.25);
+  }
 
-    .app-bar h1 {
-      font-size: 20px;
-      font-weight: 700;
-      color: #f0f3f7;
-      letter-spacing: -0.3px;
-    }
+  .bubble-block {
+    max-width:200px; min-width:60px; padding:12px 16px; border-radius:20px;
+    font-weight:600; font-size:16px; line-height:1.4; color:#1a1d21;
+    word-break:break-word; position:relative; white-space:pre-wrap;
+    box-shadow:0 6px 16px rgba(0,0,0,.35); border:2px solid transparent; outline:none;
+  }
+  /* 尾巴颜色跟随背景色 */
+  .bubble-block::after {
+    content:''; position:absolute; bottom:-14px; left:24px;
+    width:0; height:0;
+    border-left:10px solid transparent;
+    border-right:10px solid transparent;
+    border-top:16px solid currentColor;
+    filter:drop-shadow(0 2px 2px rgba(0,0,0,.25));
+  }
 
-    .app-bar .actions {
-      display: flex;
-      gap: 8px;
-    }
+  .resize-handle {
+    position:absolute; width:22px; height:22px; background:#3b7cff;
+    border:3px solid #fff; border-radius:50%; bottom:-12px; right:-12px;
+    cursor:nwse-resize; pointer-events:auto;
+    box-shadow:0 2px 8px rgba(0,0,0,.5); touch-action:none; z-index:25;
+    display:none;
+  }
+  .draggable-item.selected .resize-handle { display:block; }
+  .resize-handle:active { transform:scale(1.15); }
 
-    /* 通用小按钮 */
-    .btn {
-      border: none;
-      outline: none;
-      cursor: pointer;
-      font-family: inherit;
-      font-weight: 600;
-      border-radius: 40px;
-      transition: all 0.15s ease;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      -webkit-user-select: none;
-      user-select: none;
-    }
+  .delete-btn {
+    position:absolute; width:24px; height:24px; background:#e5484d; color:#fff;
+    border:2px solid #fff; border-radius:50%; top:-12px; right:-12px;
+    cursor:pointer; pointer-events:auto; display:none;
+    align-items:center; justify-content:center; font-size:14px; font-weight:700;
+    line-height:1; box-shadow:0 2px 8px rgba(0,0,0,.5); z-index:25;
+  }
+  .draggable-item.selected .delete-btn { display:flex; }
 
-    .btn:active {
-      transform: scale(0.94);
-    }
+  .toolbar {
+    flex-shrink:0; padding:12px 20px 8px 20px;
+    display:flex; flex-direction:column; gap:10px;
+  }
+  .tool-row { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
+  .tool-btn {
+    display:flex; flex-direction:column; align-items:center; gap:3px;
+    background:#1e2227; border:1px solid #2e3238; border-radius:16px;
+    padding:8px 12px; color:#cbd5e1; font-size:11px; font-weight:600;
+    cursor:pointer; transition:all .15s ease; min-width:60px;
+    font-family:inherit;
+  }
+  .tool-btn:hover { background:#282d34; border-color:#3b7cff; }
+  .tool-btn:active { transform:scale(0.94); }
+  .tool-btn .ico { font-size:18px; line-height:1; }
+  .tool-btn:disabled { opacity:.4; pointer-events:none; }
 
-    .btn-sm {
-      padding: 8px 14px;
-      font-size: 13px;
-      background: #2c3138;
-      color: #e0e6ed;
-    }
+  .color-row { display:flex; gap:8px; justify-content:center; align-items:center; flex-wrap:wrap; }
+  .color-dot {
+    width:26px; height:26px; border-radius:50%; cursor:pointer;
+    border:2px solid transparent; transition:all .15s ease; flex-shrink:0;
+  }
+  .color-dot:hover { transform:scale(1.15); }
+  .color-dot.active { border-color:#fff; box-shadow:0 0 0 2px #3b7cff; }
 
-    .btn-sm:hover {
-      background: #363c45;
-    }
+  .size-row {
+    display:flex; align-items:center; gap:10px; padding:0 6px;
+    color:#8e98a6; font-size:12px;
+  }
+  .size-row input[type="range"] {
+    flex:1; -webkit-appearance:none; appearance:none; height:4px;
+    background:#2e3238; border-radius:2px; outline:none;
+  }
+  .size-row input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance:none; width:18px; height:18px; border-radius:50%;
+    background:#3b7cff; cursor:pointer; box-shadow:0 2px 6px rgba(59,124,255,.5);
+  }
+  .size-row .val { min-width:32px; text-align:right; color:#e0e6ed; font-weight:600; }
 
-    .btn-primary {
-      background: #3b7cff;
-      color: #fff;
-      padding: 10px 18px;
-      font-size: 14px;
-      box-shadow: 0 4px 12px rgba(59, 124, 255, 0.4);
-    }
+  .home-indicator {
+    margin:4px auto 10px; width:130px; height:5px; background:#3d424a;
+    border-radius:40px; opacity:.7; flex-shrink:0;
+  }
 
-    .btn-primary:hover {
-      background: #2e6bef;
-    }
+  #fileInput { display:none; }
 
-    .btn-danger {
-      background: #e5484d;
-      color: #fff;
-      padding: 8px 14px;
-      font-size: 13px;
-    }
+  .toast {
+    position:absolute; bottom:100px; left:50%;
+    transform:translateX(-50%) translateY(20px);
+    background:rgba(0,0,0,.85); color:#fff; padding:10px 20px;
+    border-radius:40px; font-size:13px; font-weight:500; opacity:0;
+    pointer-events:none; transition:all .3s ease; z-index:100;
+    white-space:nowrap; backdrop-filter:blur(8px);
+    border:1px solid rgba(255,255,255,.1);
+  }
+  .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
 
-    .btn-danger:hover {
-      background: #cf3a3f;
-    }
-
-    /* 画布区域 */
-    .editor-stage {
-      flex: 1;
-      position: relative;
-      overflow: hidden;
-      background: #0a0c0e;
-      margin: 0 16px;
-      border-radius: 24px;
-      border: 1px solid #23272d;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      /* 棋盘格背景表示透明区域 */
-      background-image:
-        linear-gradient(45deg, #14171b 25%, transparent 25%),
-        linear-gradient(-45deg, #14171b 25%, transparent 25%),
-        linear-gradient(45deg, transparent 75%, #14171b 75%),
-        linear-gradient(-45deg, transparent 75%, #14171b 75%);
-      background-size: 20px 20px;
-      background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
-      background-color: #0f1114;
-    }
-
-    /* 图片容器 */
-    .canvas-wrap {
-      position: relative;
-      max-width: 100%;
-      max-height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    #bgImage {
-      max-width: 100%;
-      max-height: 100%;
-      display: block;
-      object-fit: contain;
-      pointer-events: none;
-      border-radius: 8px;
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
-    }
-
-    /* 占位提示 */
-    .placeholder {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      color: #5a6371;
-      gap: 12px;
-      padding: 40px;
-      text-align: center;
-      pointer-events: none;
-    }
-
-    .placeholder .icon {
-      font-size: 52px;
-      opacity: 0.6;
-    }
-
-    .placeholder .text {
-      font-size: 14px;
-      line-height: 1.5;
-      font-weight: 500;
-    }
-
-    /* 所有可拖拽元素容器 */
-    .overlay-layer {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      overflow: hidden;
-      border-radius: 8px;
-    }
-
-    /* 可拖拽元素基础样式 */
-    .draggable-item {
-      position: absolute;
-      pointer-events: auto;
-      cursor: grab;
-      -webkit-user-select: none;
-      user-select: none;
-      touch-action: none;
-      transform-origin: center center;
-      transition: box-shadow 0.15s ease;
-      z-index: 10;
-    }
-
-    .draggable-item:active {
-      cursor: grabbing;
-    }
-
-    .draggable-item.selected {
-      z-index: 20;
-      box-shadow: 0 0 0 2px #3b7cff, 0 0 0 4px rgba(59, 124, 255, 0.3);
-      border-radius: 4px;
-    }
-
-    /* 文字块 */
-    .text-block {
-      min-width: 40px;
-      padding: 6px 10px;
-      color: #fff;
-      font-weight: 700;
-      font-size: 22px;
-      line-height: 1.25;
-      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
-      white-space: pre-wrap;
-      word-break: break-word;
-      outline: none;
-      border-radius: 6px;
-      background: rgba(0, 0, 0, 0.15);
-      backdrop-filter: blur(2px);
-      border: 1px dashed rgba(255, 255, 255, 0.25);
-    }
-
-    .text-block.editing {
-      background: rgba(0, 0, 0, 0.5);
-      border-color: #3b7cff;
-      cursor: text;
-    }
-
-    /* 对话框气泡 */
-    .bubble-block {
-      max-width: 200px;
-      min-width: 60px;
-      padding: 12px 16px;
-      border-radius: 20px;
-      font-weight: 600;
-      font-size: 16px;
-      line-height: 1.4;
-      color: #1a1d21;
-      word-break: break-word;
-      position: relative;
-      white-space: pre-wrap;
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
-      border: 2px solid transparent;
-      outline: none;
-    }
-
-    .bubble-block.editing {
-      border-color: #3b7cff;
-      cursor: text;
-    }
-
-    /* 气泡小尾巴 */
-    .bubble-block::after {
-      content: '';
-      position: absolute;
-      bottom: -14px;
-      left: 24px;
-      width: 0;
-      height: 0;
-      border-left: 10px solid transparent;
-      border-right: 10px solid transparent;
-      border-top: 16px solid currentColor;
-      filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.25));
-    }
-
-    /* 调整大小手柄 */
-    .resize-handle {
-      position: absolute;
-      width: 22px;
-      height: 22px;
-      background: #3b7cff;
-      border: 3px solid #fff;
-      border-radius: 50%;
-      bottom: -12px;
-      right: -12px;
-      cursor: nwse-resize;
-      pointer-events: auto;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
-      touch-action: none;
-      z-index: 25;
-      display: none;
-    }
-
-    .draggable-item.selected .resize-handle {
-      display: block;
-    }
-
-    .resize-handle:active {
-      transform: scale(1.15);
-    }
-
-    /* 删除按钮 */
-    .delete-btn {
-      position: absolute;
-      width: 24px;
-      height: 24px;
-      background: #e5484d;
-      color: #fff;
-      border: 2px solid #fff;
-      border-radius: 50%;
-      top: -12px;
-      right: -12px;
-      cursor: pointer;
-      pointer-events: auto;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
-      font-weight: 700;
-      line-height: 1;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
-      z-index: 25;
-      padding-bottom: 1px;
-    }
-
-    .draggable-item.selected .delete-btn {
-      display: flex;
-    }
-
-    /* 底部工具栏 */
-    .toolbar {
-      flex-shrink: 0;
-      padding: 12px 20px 8px 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .tool-row {
-      display: flex;
-      gap: 8px;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-
-    .tool-btn {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 3px;
-      background: #1e2227;
-      border: 1px solid #2e3238;
-      border-radius: 16px;
-      padding: 8px 12px;
-      color: #cbd5e1;
-      font-size: 11px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      min-width: 60px;
-    }
-
-    .tool-btn:hover {
-      background: #282d34;
-      border-color: #3b7cff;
-    }
-
-    .tool-btn:active {
-      transform: scale(0.94);
-    }
-
-    .tool-btn .ico {
-      font-size: 18px;
-      line-height: 1;
-    }
-
-    .tool-btn:disabled {
-      opacity: 0.4;
-      pointer-events: none;
-    }
-
-    /* 颜色选择器行 */
-    .color-row {
-      display: flex;
-      gap: 8px;
-      justify-content: center;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-
-    .color-dot {
-      width: 26px;
-      height: 26px;
-      border-radius: 50%;
-      cursor: pointer;
-      border: 2px solid transparent;
-      transition: all 0.15s ease;
-      flex-shrink: 0;
-    }
-
-    .color-dot:hover {
-      transform: scale(1.15);
-    }
-
-    .color-dot.active {
-      border-color: #fff;
-      box-shadow: 0 0 0 2px #3b7cff;
-    }
-
-    /* 字体大小滑块 */
-    .size-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 0 6px;
-      color: #8e98a6;
-      font-size: 12px;
-    }
-
-    .size-row input[type="range"] {
-      flex: 1;
-      -webkit-appearance: none;
-      appearance: none;
-      height: 4px;
-      background: #2e3238;
-      border-radius: 2px;
-      outline: none;
-    }
-
-    .size-row input[type="range"]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      background: #3b7cff;
-      cursor: pointer;
-      box-shadow: 0 2px 6px rgba(59, 124, 255, 0.5);
-    }
-
-    .size-row .val {
-      min-width: 32px;
-      text-align: right;
-      color: #e0e6ed;
-      font-weight: 600;
-      font-variant-numeric: tabular-nums;
-    }
-
-    /* Home Indicator */
-    .home-indicator {
-      margin: 4px auto 10px;
-      width: 130px;
-      height: 5px;
-      background: #3d424a;
-      border-radius: 40px;
-      opacity: 0.7;
-      flex-shrink: 0;
-    }
-
-    /* 隐藏的文件输入 */
-    #fileInput {
-      display: none;
-    }
-
-    /* 小提示 */
-    .toast {
-      position: absolute;
-      bottom: 100px;
-      left: 50%;
-      transform: translateX(-50%) translateY(20px);
-      background: rgba(0, 0, 0, 0.85);
-      color: #fff;
-      padding: 10px 20px;
-      border-radius: 40px;
-      font-size: 13px;
-      font-weight: 500;
-      opacity: 0;
-      pointer-events: none;
-      transition: all 0.3s ease;
-      z-index: 100;
-      white-space: nowrap;
-      backdrop-filter: blur(8px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .toast.show {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
-
-    /* 图片嵌入字体的效果（保留一个展示区） */
-    .demo-embed {
-      margin: 0 20px 12px 20px;
-      flex-shrink: 0;
-      background: #1a1d21;
-      border-radius: 18px;
-      padding: 8px 14px;
-      border: 1px solid #2e3238;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-    }
-
-    .demo-embed .label {
-      font-size: 11px;
-      color: #6e7887;
-      font-weight: 500;
-    }
-
-    .demo-embed .sample {
-      font-size: 32px;
-      font-weight: 900;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      background-image: url('https://images.unsplash.com/photo-1557682250-33bd709cbe85?w=400&q=60');
-      background-size: cover;
-      background-position: center;
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-      color: transparent;
-      line-height: 1;
-    }
-
-    @media (max-width: 420px) {
-      .phone-frame {
-        height: 95vh;
-        border-radius: 36px;
-        box-shadow:
-          0 20px 40px rgba(0, 0, 0, 0.9),
-          0 0 0 6px #1e2023,
-          0 0 0 10px #2a2d31;
-      }
-      .editor-stage {
-        margin: 0 10px;
-      }
-      .toolbar {
-        padding: 10px 10px 6px 10px;
-      }
-      .tool-btn {
-        min-width: 52px;
-        padding: 6px 8px;
-        font-size: 10px;
-      }
-      .app-bar h1 {
-        font-size: 17px;
-      }
-    }
-  </style>
+  @media (max-width:420px) {
+    .phone-frame { height:95vh; border-radius:36px;
+      box-shadow:0 20px 40px rgba(0,0,0,.9),0 0 0 6px #1e2023,0 0 0 10px #2a2d31; }
+    .editor-stage { margin:0 10px; }
+    .toolbar { padding:10px 10px 6px 10px; }
+    .tool-btn { min-width:52px; padding:6px 8px; font-size:10px; }
+    .app-bar h1 { font-size:17px; }
+  }
+</style>
 </head>
 <body>
-  <div class="phone-frame" id="app">
-    <!-- 状态栏 -->
-    <div class="status-bar">
-      <span>9:41</span>
-      <span>📶 🔋</span>
-    </div>
-
-    <!-- 顶部操作栏 -->
-    <div class="app-bar">
-      <h1>图片编辑器</h1>
-      <div class="actions">
-        <button class="btn btn-sm" id="importBtn" title="导入图片">📁 导入</button>
-        <button class="btn btn-primary" id="exportBtn" title="导出图片">导出</button>
-      </div>
-    </div>
-
-    <!-- 图片嵌入字体演示（小） -->
-    <div class="demo-embed">
-      <span class="label">图片嵌入字体</span>
-      <span class="sample">TEXT</span>
-    </div>
-
-    <!-- 编辑器画布 -->
-    <div class="editor-stage" id="editorStage">
-      <div class="canvas-wrap" id="canvasWrap">
-        <img id="bgImage" alt="背景图片" style="display: none;">
-        <div class="placeholder" id="placeholder">
-          <div class="icon">🖼️</div>
-          <div class="text">点击“导入”按钮<br>选择一张图片开始编辑</div>
-        </div>
-        <!-- 覆盖层：存放所有可拖拽元素 -->
-        <div class="overlay-layer" id="overlayLayer"></div>
-      </div>
-    </div>
-
-    <!-- 底部工具栏 -->
-    <div class="toolbar">
-      <div class="tool-row">
-        <button class="tool-btn" id="addTextBtn" disabled>
-          <span class="ico">T</span>
-          <span>文字</span>
-        </button>
-        <button class="tool-btn" id="addBubbleBtn" disabled>
-          <span class="ico">💬</span>
-          <span>对话框</span>
-        </button>
-        <button class="tool-btn" id="deleteSelectedBtn" disabled>
-          <span class="ico">🗑️</span>
-          <span>删除</span>
-        </button>
-        <button class="tool-btn" id="resetBtn" disabled>
-          <span class="ico">↺</span>
-          <span>清空</span>
-        </button>
-      </div>
-
-      <!-- 颜色选择 -->
-      <div class="color-row" id="colorRow">
-        <div class="color-dot active" data-color="#ffffff" style="background:#ffffff;"></div>
-        <div class="color-dot" data-color="#000000" style="background:#000000;"></div>
-        <div class="color-dot" data-color="#ff4757" style="background:#ff4757;"></div>
-        <div class="color-dot" data-color="#2ed573" style="background:#2ed573;"></div>
-        <div class="color-dot" data-color="#3b7cff" style="background:#3b7cff;"></div>
-        <div class="color-dot" data-color="#feca57" style="background:#feca57;"></div>
-        <div class="color-dot" data-color="#a55eea" style="background:#a55eea;"></div>
-      </div>
-
-      <!-- 字体大小 -->
-      <div class="size-row">
-        <span>字号</span>
-        <input type="range" id="fontSizeSlider" min="12" max="72" value="22" step="1" disabled>
-        <span class="val" id="fontSizeVal">22</span>
-      </div>
-    </div>
-
-    <!-- Home Indicator -->
-    <div class="home-indicator"></div>
-
-    <!-- 隐藏的文件输入 -->
-    <input type="file" id="fileInput" accept="image/*">
-
-    <!-- Toast 提示 -->
-    <div class="toast" id="toast"></div>
+<div class="phone-frame" id="app">
+  <div class="status-bar">
+    <span>9:41</span>
+    <span>📶 🔋</span>
   </div>
 
-  <script>
-    (function() {
-      // ============ DOM 引用 ============
-      const bgImage = document.getElementById('bgImage');
-      const placeholder = document.getElementById('placeholder');
-      const overlayLayer = document.getElementById('overlayLayer');
-      const importBtn = document.getElementById('importBtn');
-      const exportBtn = document.getElementById('exportBtn');
-      const fileInput = document.getElementById('fileInput');
-      const addTextBtn = document.getElementById('addTextBtn');
-      const addBubbleBtn = document.getElementById('addBubbleBtn');
-      const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
-      const resetBtn = document.getElementById('resetBtn');
-      const fontSizeSlider = document.getElementById('fontSizeSlider');
-      const fontSizeVal = document.getElementById('fontSizeVal');
-      const colorRow = document.getElementById('colorRow');
-      const toast = document.getElementById('toast');
-      const editorStage = document.getElementById('editorStage');
+  <div class="app-bar">
+    <h1>图片编辑器</h1>
+    <div class="actions">
+      <button class="btn btn-sm" id="importBtn" title="导入图片">📁 导入</button>
+      <button class="btn btn-primary" id="exportBtn" title="导出图片">导出</button>
+    </div>
+  </div>
 
-      // ============ 状态 ============
-      let selectedItem = null;         // 当前选中的可拖拽元素
-      let currentColor = '#ffffff';    // 当前选中的颜色（用于新添加或更新选中元素）
-      let currentFontSize = 22;
-      let itemIdCounter = 0;
+  <div class="editor-stage" id="editorStage">
+    <div class="canvas-wrap" id="canvasWrap">
+      <img id="bgImage" alt="背景图片" style="display:none;">
+      <div class="placeholder" id="placeholder">
+        <div class="icon">🖼️</div>
+        <div class="text">点击“导入”按钮<br>选择一张图片开始编辑</div>
+      </div>
+      <div class="overlay-layer" id="overlayLayer"></div>
+    </div>
+  </div>
 
-      // ============ 工具函数 ============
-      function showToast(msg, duration = 1800) {
-        toast.textContent = msg;
-        toast.classList.add('show');
-        clearTimeout(toast._timer);
-        toast._timer = setTimeout(() => {
-          toast.classList.remove('show');
-        }, duration);
+  <div class="toolbar">
+    <div class="tool-row">
+      <button class="tool-btn" id="addTextBtn" disabled>
+        <span class="ico">T</span><span>文字</span>
+      </button>
+      <button class="tool-btn" id="addBubbleBtn" disabled>
+        <span class="ico">💬</span><span>对话框</span>
+      </button>
+      <button class="tool-btn" id="deleteSelectedBtn" disabled>
+        <span class="ico">🗑️</span><span>删除</span>
+      </button>
+      <button class="tool-btn" id="resetBtn" disabled>
+        <span class="ico">↺</span><span>清空</span>
+      </button>
+    </div>
+
+    <div class="color-row" id="colorRow">
+      <div class="color-dot active" data-color="#ffffff" style="background:#ffffff;"></div>
+      <div class="color-dot" data-color="#000000" style="background:#000000;"></div>
+      <div class="color-dot" data-color="#ff4757" style="background:#ff4757;"></div>
+      <div class="color-dot" data-color="#2ed573" style="background:#2ed573;"></div>
+      <div class="color-dot" data-color="#3b7cff" style="background:#3b7cff;"></div>
+      <div class="color-dot" data-color="#feca57" style="background:#feca57;"></div>
+      <div class="color-dot" data-color="#a55eea" style="background:#a55eea;"></div>
+    </div>
+
+    <div class="size-row">
+      <span>字号</span>
+      <input type="range" id="fontSizeSlider" min="12" max="72" value="22" step="1" disabled>
+      <span class="val" id="fontSizeVal">22</span>
+    </div>
+  </div>
+
+  <div class="home-indicator"></div>
+  <input type="file" id="fileInput" accept="image/*">
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  // ============ DOM ============
+  const bgImage = document.getElementById('bgImage');
+  const placeholder = document.getElementById('placeholder');
+  const overlayLayer = document.getElementById('overlayLayer');
+  const importBtn = document.getElementById('importBtn');
+  const exportBtn = document.getElementById('exportBtn');
+  const fileInput = document.getElementById('fileInput');
+  const addTextBtn = document.getElementById('addTextBtn');
+  const addBubbleBtn = document.getElementById('addBubbleBtn');
+  const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const fontSizeSlider = document.getElementById('fontSizeSlider');
+  const fontSizeVal = document.getElementById('fontSizeVal');
+  const colorRow = document.getElementById('colorRow');
+  const toast = document.getElementById('toast');
+  const editorStage = document.getElementById('editorStage');
+  const canvasWrap = document.getElementById('canvasWrap');
+
+  // ============ 状态 ============
+  let selectedItem = null;
+  let currentColor = '#ffffff';
+  let currentFontSize = 22;
+  let itemIdCounter = 0;
+
+  // ============ 工具函数 ============
+  function showToast(msg, duration) {
+    duration = duration || 1800;
+    toast.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(toast._timer);
+    toast._timer = setTimeout(function() { toast.classList.remove('show'); }, duration);
+  }
+
+  function deselectAll() {
+    document.querySelectorAll('.draggable-item.selected').forEach(function(el) {
+      el.classList.remove('selected');
+    });
+    selectedItem = null;
+    updateToolbarState();
+  }
+
+  function selectItem(el) {
+    if (selectedItem === el) return;
+    deselectAll();
+    if (el) {
+      el.classList.add('selected');
+      selectedItem = el;
+      if (el.dataset.type === 'text' || el.dataset.type === 'bubble') {
+        var fs = parseInt(el.dataset.fontSize || '22', 10);
+        currentFontSize = fs;
+        fontSizeSlider.value = fs;
+        fontSizeVal.textContent = fs;
+        fontSizeSlider.disabled = false;
       }
+      if (el.dataset.color) {
+        currentColor = el.dataset.color;
+        updateColorDots(el.dataset.color);
+      }
+    } else {
+      fontSizeSlider.disabled = true;
+      updateColorDots(currentColor);
+    }
+    updateToolbarState();
+  }
 
-      // 取消所有选中
-      function deselectAll() {
-        document.querySelectorAll('.draggable-item.selected').forEach(el => {
-          el.classList.remove('selected');
-          el.blur();
-        });
-        selectedItem = null;
+  function updateColorDots(color) {
+    document.querySelectorAll('.color-dot').forEach(function(dot) {
+      dot.classList.toggle('active', dot.dataset.color === color);
+    });
+  }
+
+  function updateToolbarState() {
+    var hasImage = bgImage.style.display !== 'none' && bgImage.src;
+    addTextBtn.disabled = !hasImage;
+    addBubbleBtn.disabled = !hasImage;
+    resetBtn.disabled = !hasImage;
+    deleteSelectedBtn.disabled = !selectedItem;
+    if (!selectedItem) fontSizeSlider.disabled = true;
+  }
+
+  function genId() {
+    return 'item_' + (++itemIdCounter) + '_' + Date.now();
+  }
+
+  // ============ 拖拽（含缩放） ============
+  function makeDraggable(el) {
+    var startX = 0, startY = 0, startLeft = 0, startTop = 0;
+    var isDragging = false;
+
+    el.addEventListener('pointerdown', function(e) {
+      if (e.target.closest('.delete-btn') || e.target.closest('.resize-handle')) return;
+      if (el.querySelector('.editing')) return;
+      if (e.target.isContentEditable) return;
+
+      e.preventDefault();
+      selectItem(el);
+
+      var stageRect = editorStage.getBoundingClientRect();
+      var elRect = el.getBoundingClientRect();
+      startLeft = elRect.left - stageRect.left;
+      startTop = elRect.top - stageRect.top;
+      startX = e.clientX;
+      startY = e.clientY;
+      isDragging = true;
+
+      try { el.setPointerCapture(e.pointerId); } catch(_) {}
+      el.style.cursor = 'grabbing';
+    });
+
+    el.addEventListener('pointermove', function(e) {
+      if (!isDragging) return;
+      e.preventDefault();
+
+      var dx = e.clientX - startX;
+      var dy = e.clientY - startY;
+      var newLeft = startLeft + dx;
+      var newTop = startTop + dy;
+
+      var stageRect = editorStage.getBoundingClientRect();
+      var elRect = el.getBoundingClientRect();
+      var maxLeft = stageRect.width - elRect.width + 20;
+      var maxTop = stageRect.height - elRect.height + 20;
+      newLeft = Math.max(-10, Math.min(newLeft, maxLeft));
+      newTop = Math.max(-10, Math.min(newTop, maxTop));
+
+      el.style.left = newLeft + 'px';
+      el.style.top = newTop + 'px';
+    });
+
+    el.addEventListener('pointerup', function(e) {
+      if (!isDragging) return;
+      isDragging = false;
+      el.style.cursor = 'grab';
+      try { el.releasePointerCapture(e.pointerId); } catch(_) {}
+    });
+
+    el.addEventListener('pointercancel', function() {
+      isDragging = false;
+      el.style.cursor = 'grab';
+    });
+
+    // 双击编辑（桌面）
+    el.addEventListener('dblclick', function(e) {
+      if (el.dataset.type === 'text' || el.dataset.type === 'bubble') {
+        e.stopPropagation();
+        startEditing(el);
+      }
+    });
+
+    // 双击编辑（移动端）
+    var lastTap = 0;
+    el.addEventListener('touchend', function(e) {
+      var now = Date.now();
+      if (now - lastTap < 300) {
+        e.preventDefault();
+        if (el.dataset.type === 'text' || el.dataset.type === 'bubble') {
+          startEditing(el);
+        }
+      }
+      lastTap = now;
+    }, { passive: false });
+  }
+
+  // ============ 编辑文本 ============
+  function startEditing(el) {
+    if (el.querySelector('.editing')) return;
+    var contentEl = el.querySelector('.content');
+    if (!contentEl) return;
+    var originalText = contentEl.textContent || '';
+    var editor = document.createElement('div');
+    editor.className = 'editing';
+    editor.contentEditable = 'true';
+    editor.style.outline = 'none';
+    editor.style.minWidth = '20px';
+    editor.style.display = 'inline-block';
+    editor.textContent = originalText;
+
+    contentEl.style.display = 'none';
+    el.appendChild(editor);
+    editor.focus();
+
+    try {
+      var range = document.createRange();
+      range.selectNodeContents(editor);
+      var sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+    } catch(_) {}
+
+    function finish() {
+      var newText = editor.innerText || editor.textContent || '';
+      if (!newText.trim()) newText = '文字';
+      contentEl.textContent = newText;
+      contentEl.style.display = '';
+      editor.remove();
+      el.dataset.text = newText;
+    }
+
+    editor.addEventListener('blur', finish);
+    editor.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); editor.blur(); }
+      if (e.key === 'Escape') { editor.textContent = originalText; editor.blur(); }
+    });
+  }
+
+  // ============ 缩放字号 ============
+  function setupResize(el, handle) {
+    var startX = 0, startY = 0, startSize = 0, resizing = false;
+
+    handle.addEventListener('pointerdown', function(e) {
+      e.stopPropagation();
+      e.preventDefault();
+      resizing = true;
+      startX = e.clientX;
+      startY = e.clientY;
+      startSize = parseInt(el.dataset.fontSize || '22', 10);
+      try { handle.setPointerCapture(e.pointerId); } catch(_) {}
+    });
+
+    handle.addEventListener('pointermove', function(e) {
+      if (!resizing) return;
+      e.preventDefault();
+      var dx = e.clientX - startX;
+      var dy = e.clientY - startY;
+      var delta = Math.max(dx, dy) / 2;
+      var newSize = Math.round(startSize + delta);
+      newSize = Math.max(12, Math.min(96, newSize));
+      el.dataset.fontSize = newSize;
+      el.style.fontSize = newSize + 'px';
+      if (selectedItem === el) {
+        fontSizeSlider.value = newSize;
+        fontSizeVal.textContent = newSize;
+        currentFontSize = newSize;
+      }
+    });
+
+    handle.addEventListener('pointerup', function(e) {
+      resizing = false;
+      try { handle.releasePointerCapture(e.pointerId); } catch(_) {}
+    });
+  }
+
+  // ============ 添加元素 ============
+  function addTextBlock(x, y, text, color, fontSize) {
+    text = text || '双击编辑文字';
+    color = color || currentColor;
+    fontSize = fontSize || currentFontSize;
+    var id = genId();
+    var el = document.createElement('div');
+    el.className = 'draggable-item text-block';
+    el.dataset.id = id;
+    el.dataset.type = 'text';
+    el.dataset.color = color;
+    el.dataset.fontSize = fontSize;
+    el.dataset.text = text;
+    el.style.left = (x || 30) + 'px';
+    el.style.top = (y || 30) + 'px';
+    el.style.color = color;
+    el.style.fontSize = fontSize + 'px';
+
+    var content = document.createElement('div');
+    content.className = 'content';
+    content.textContent = text;
+    content.style.pointerEvents = 'none';
+    el.appendChild(content);
+
+    var delBtn = document.createElement('div');
+    delBtn.className = 'delete-btn';
+    delBtn.textContent = '×';
+    delBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      el.remove();
+      if (selectedItem === el) { selectedItem = null; updateToolbarState(); }
+    });
+    el.appendChild(delBtn);
+
+    var resizeHandle = document.createElement('div');
+    resizeHandle.className = 'resize-handle';
+    setupResize(el, resizeHandle);
+    el.appendChild(resizeHandle);
+
+    makeDraggable(el);
+
+    el.addEventListener('pointerdown', function(e) {
+      if (e.target.closest('.delete-btn') || e.target.closest('.resize-handle') || e.target.closest('.editing')) return;
+      selectItem(el);
+    });
+
+    overlayLayer.appendChild(el);
+    selectItem(el);
+    return el;
+  }
+
+  function addBubbleBlock(x, y, text, color, fontSize) {
+    text = text || '对话内容';
+    color = color || currentColor;
+    fontSize = fontSize || currentFontSize;
+    var id = genId();
+    var el = document.createElement('div');
+    el.className = 'draggable-item bubble-block';
+    el.dataset.id = id;
+    el.dataset.type = 'bubble';
+    el.dataset.color = color;
+    el.dataset.fontSize = fontSize;
+    el.dataset.text = text;
+    el.style.left = (x || 50) + 'px';
+    el.style.top = (y || 50) + 'px';
+    el.style.fontSize = fontSize + 'px';
+
+    // 根据颜色亮度自动调整文字颜色
+    function applyBubbleColor(bgColor) {
+      var hex = bgColor.replace('#', '');
+      var r = parseInt(hex.substr(0,2), 16);
+      var g = parseInt(hex.substr(2,2), 16);
+      var b = parseInt(hex.substr(4,2), 16);
+      var brightness = (r*299 + g*587 + b*114) / 1000;
+      el.style.background = bgColor;
+      el.style.color = brightness > 128 ? '#1a1d21' : '#ffffff';
+      // 尾巴颜色跟背景一致
+      el.style.setProperty('--tail-color', bgColor);
+    }
+    applyBubbleColor(color);
+
+    var content = document.createElement('div');
+    content.className = 'content';
+    content.textContent = text;
+    content.style.pointerEvents = 'none';
+    el.appendChild(content);
+
+    var delBtn = document.createElement('div');
+    delBtn.className = 'delete-btn';
+    delBtn.textContent = '×';
+    delBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      el.remove();
+      if (selectedItem === el) { selectedItem = null; updateToolbarState(); }
+    });
+    el.appendChild(delBtn);
+
+    var resizeHandle = document.createElement('div');
+    resizeHandle.className = 'resize-handle';
+    setupResize(el, resizeHandle);
+    el.appendChild(resizeHandle);
+
+    makeDraggable(el);
+
+    el.addEventListener('pointerdown', function(e) {
+      if (e.target.closest('.delete-btn') || e.target.closest('.resize-handle') || e.target.closest('.editing')) return;
+      selectItem(el);
+    });
+
+    overlayLayer.appendChild(el);
+    selectItem(el);
+    return el;
+  }
+
+  // ============ 导入图片 ============
+  importBtn.addEventListener('click', function() {
+    fileInput.click();
+  });
+
+  fileInput.addEventListener('change', function(e) {
+    var file = e.target.files && e.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      showToast('请选择图片文件');
+      return;
+    }
+    var reader = new FileReader();
+    reader.onload = function(ev) {
+      bgImage.src = ev.target.result;
+      bgImage.style.display = 'block';
+      placeholder.style.display = 'none';
+      // 重置画布尺寸
+      bgImage.onload = function() {
         updateToolbarState();
+        showToast('图片已导入');
+      };
+    };
+    reader.readAsDataURL(file);
+    fileInput.value = '';
+  });
+
+  // ============ 添加按钮 ============
+  addTextBtn.addEventListener('click', function() {
+    if (bgImage.style.display === 'none') { showToast('请先导入图片'); return; }
+    addTextBlock(40, 40, '双击编辑文字', currentColor, currentFontSize);
+    showToast('已添加文字');
+  });
+
+  addBubbleBtn.addEventListener('click', function() {
+    if (bgImage.style.display === 'none') { showToast('请先导入图片'); return; }
+    addBubbleBlock(60, 60, '对话内容', currentColor, currentFontSize);
+    showToast('已添加对话框');
+  });
+
+  deleteSelectedBtn.addEventListener('click', function() {
+    if (selectedItem) {
+      selectedItem.remove();
+      selectedItem = null;
+      updateToolbarState();
+      showToast('已删除');
+    }
+  });
+
+  resetBtn.addEventListener('click', function() {
+    if (!overlayLayer.children.length) { showToast('没有可清空的内容'); return; }
+    if (confirm('确定清空所有文字和对话框吗？')) {
+      overlayLayer.innerHTML = '';
+      selectedItem = null;
+      updateToolbarState();
+      showToast('已清空');
+    }
+  });
+
+  // ============ 颜色选择 ============
+  colorRow.addEventListener('click', function(e) {
+    var dot = e.target.closest('.color-dot');
+    if (!dot) return;
+    var color = dot.dataset.color;
+    currentColor = color;
+    updateColorDots(color);
+
+    if (selectedItem) {
+      selectedItem.dataset.color = color;
+      if (selectedItem.dataset.type === 'text') {
+        selectedItem.style.color = color;
+      } else if (selectedItem.dataset.type === 'bubble') {
+        // 对话框：根据背景色亮度调整文字色
+        var hex = color.replace('#','');
+        var r = parseInt(hex.substr(0,2),16);
+        var g = parseInt(hex.substr(2,2),16);
+        var b = parseInt(hex.substr(4,2),16);
+        var brightness = (r*299 + g*587 + b*114) / 1000;
+        selectedItem.style.background = color;
+        selectedItem.style.color = brightness > 128 ? '#1a1d21' : '#ffffff';
       }
+    }
+  });
 
-      // 选中某个元素
-      function selectItem(el) {
-        if (selectedItem === el) return;
-        deselectAll();
-        if (el) {
-          el.classList.add('selected');
-          selectedItem = el;
-          // 同步字体大小滑块和颜色
-          if (el.dataset.type === 'text' || el.dataset.type === 'bubble') {
-            const fs = parseInt(el.dataset.fontSize || '22', 10);
-            currentFontSize = fs;
-            fontSizeSlider.value = fs;
-            fontSizeVal.textContent = fs;
-            fontSizeSlider.disabled = false;
-          }
-          if (el.dataset.color) {
-            currentColor = el.dataset.color;
-            updateColorDots(el.dataset.color);
-          }
-        } else {
-          fontSizeSlider.disabled = true;
-          updateColorDots(currentColor);
-        }
-        updateToolbarState();
-      }
+  // ============ 字号滑块 ============
+  fontSizeSlider.addEventListener('input', function() {
+    var size = parseInt(fontSizeSlider.value, 10);
+    currentFontSize = size;
+    fontSizeVal.textContent = size;
+    if (selectedItem && (selectedItem.dataset.type === 'text' || selectedItem.dataset.type === 'bubble')) {
+      selectedItem.dataset.fontSize = size;
+      selectedItem.style.fontSize = size + 'px';
+    }
+  });
 
-      // 更新颜色圆点激活状态
-      function updateColorDots(color) {
-        document.querySelectorAll('.color-dot').forEach(dot => {
-          dot.classList.toggle('active', dot.dataset.color === color);
-        });
-      }
+  // ============ 点击空白处取消选中 ============
+  editorStage.addEventListener('pointerdown', function(e) {
+    if (e.target === editorStage || e.target === canvasWrap || e.target === placeholder || e.target === bgImage) {
+      deselectAll();
+    }
+  });
 
-      // 更新工具栏按钮状态
-      function updateToolbarState() {
-        const hasImage = bgImage.style.display !== 'none' && bgImage.src;
-        addTextBtn.disabled = !hasImage;
-        addBubbleBtn.disabled = !hasImage;
-        resetBtn.disabled = !hasImage;
-        deleteSelectedBtn.disabled = !selectedItem;
-        if (!selectedItem) {
-          fontSizeSlider.disabled = true;
-        }
-      }
+  // ============ 导出图片 ============
+  exportBtn.addEventListener('click', function() {
+    if (bgImage.style.display === 'none' || !bgImage.src) {
+      showToast('请先导入图片');
+      return;
+    }
 
-      // 生成唯一 ID
-      function genId() {
-        return 'item_' + (++itemIdCounter) + '_' + Date.now();
-      }
+    showToast('正在生成，请稍候…', 3000);
 
-      // ============ 拖拽核心逻辑（Pointer Events） ============
-      function makeDraggable(el) {
-        let startX = 0, startY = 0;
-        let startLeft = 0, startTop = 0;
-        let isDragging = false;
-        let hasMoved = false;
+    // 等图片加载完成后绘制
+    var img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = function() {
+      var canvas = document.createElement('canvas');
+      var ctx = canvas.getContext('2d');
 
-        el.addEventListener('pointerdown', (e) => {
-          // 如果点的是删除按钮或缩放手柄，不触发拖拽
-          if (e.target.closest('.delete-btn') || e.target.closest('.resize-handle')) return;
-          if (el.querySelector('.editing')) return; // 正在编辑文本时不拖拽
+      // 画布尺寸使用图片原始尺寸
+      var W = img.naturalWidth;
+      var H = img.naturalHeight;
+      canvas.width = W;
+      canvas.height = H;
 
-          e.preventDefault();
-          // 选中
-          selectItem(el);
+      // 绘制背景图
+      ctx.drawImage(img, 0, 0, W, H);
 
-          // 记录起始位置
-          const rect = el.getBoundingClientRect();
-          const stageRect = editorStage.getBoundingClientRect();
+      // 计算图片在编辑器中的显示尺寸和实际尺寸的比例
+      var displayW = bgImage.clientWidth;
+      var displayH = bgImage.clientHeight;
+      var scaleX = W / displayW;
+      var scaleY = H / displayH;
 
-          // 计算相对 stage 的偏移
-          startLeft = rect.left - stageRect.left;
-          startTop = rect.top - stageRect.top;
-          startX = e.clientX;
-          startY = e.clientY;
-          isDragging = true;
-          hasMoved = false;
+      // 图片在编辑器中相对于 overlayLayer 的位置偏移
+      var imgRect = bgImage.getBoundingClientRect();
+      var stageRect = editorStage.getBoundingClientRect();
+      var offsetX = imgRect.left - stageRect.left;
+      var offsetY = imgRect.top - stageRect.top;
 
-          el.setPointerCapture(e.pointerId);
-          el.style.cursor = 'grabbing';
-        });
+      // 遍历所有元素绘制
+      var items = overlayLayer.querySelectorAll('.draggable-item');
+      items.forEach(function(el) {
+        var elRect = el.getBoundingClientRect();
+        var stageRect2 = editorStage.getBoundingClientRect();
 
-        el.addEventListener('pointermove', (e) => {
-          if (!isDragging) return;
-          e.preventDefault();
+        // 元素相对于 stage 的位置
+        var leftRel = elRect.left - stageRect2.left;
+        var topRel = elRect.top - stageRect2.top;
 
-          const dx = e.clientX - startX;
-          const dy = e.clientY - startY;
+        // 转换为相对于图片左上角的位置，再乘缩放比例
+        var x = (leftRel - offsetX) * scaleX;
+        var y = (topRel - offsetY) * scaleY;
+        var w = elRect.width * scaleX;
+        var h = elRect.height * scaleY;
 
-          if (Math.abs(dx) > 2 || Math.abs(dy) > 2) hasMoved = true;
+        var type = el.dataset.type;
+        var fontSize = parseInt(el.dataset.fontSize || '22', 10) * scaleY;
+        var text = el.dataset.text || '';
+        var color = el.dataset.color || '#ffffff';
 
-          let newLeft = startLeft + dx;
-          let newTop = startTop + dy;
+        if (type === 'text') {
+          ctx.font = '700 ' + fontSize + 'px system-ui, -apple-system, sans-serif';
+          ctx.fillStyle = color;
+          ctx.textBaseline = 'top';
+          ctx.shadowColor = 'rgba(0,0,0,0.6)';
+          ctx.shadowBlur = 8 * scaleY;
+          ctx.shadowOffsetY = 2 * scaleY;
+          // 简单换行处理
+          var lines = text.split('\n');
+          var lineHeight = fontSize * 1.25;
+          lines.forEach(function(line, i) {
+            ctx.fillText(line, x + 10 * scaleX, y + 6 * scaleY + i * lineHeight);
+          });
+          ctx.shadowColor = 'transparent';
+          ctx.shadowBlur = 0;
+          ctx.shadowOffsetY = 0;
+        } else if (type === 'bubble') {
+          // 绘制圆角矩形
+          var radius = 20 * scaleX;
+          ctx.fillStyle = color;
+          ctx.shadowColor = 'rgba(0,0,0,0.3)';
+          ctx.shadowBlur = 12 * scaleY;
+          ctx.shadowOffsetY = 4 * scaleY;
 
-          // 限制在 stage 内（可稍微超出一点，但保持可见）
-          const stageRect = editorStage.getBoundingClientRect();
-          const elRect = el.getBoundingClientRect();
-          const maxLeft = stageRect.width - elRect.width + 20;
-          const maxTop = stageRect.height - elRect.height + 20;
-
-          newLeft = Math.max(-10, Math.min(newLeft, maxLeft));
-          newTop = Math.max(-10, Math.min(newTop, maxTop));
-
-          el.style.left = newLeft + 'px';
-          el.style.top = newTop + 'px';
-          // 确保使用绝对定位
-          el.style.position = 'absolute';
-        });
-
-        el.addEventListener('pointerup', (e) => {
-          if (!isDragging) return;
-          isDragging = false;
-          el.style.cursor = 'grab';
-          try { el.releasePointerCapture(e.pointerId); } catch (_) {}
-        });
-
-        el.addEventListener('pointercancel', (e) => {
-          isDragging = false;
-          el.style.cursor = 'grab';
-        });
-
-        // 双击编辑文本
-        el.addEventListener('dblclick', (e) => {
-          if (el.dataset.type === 'text' || el.dataset.type === 'bubble') {
-            e.stopPropagation();
-            startEditing(el);
-          }
-        });
-
-        // 移动端双击（用 touch 模拟）
-        let lastTap = 0;
-        el.addEventListener('touchend', (e) => {
-          const now = Date.now();
-          if (now - lastTap < 300) {
-            e.preventDefault();
-            if (el.dataset.type === 'text' || el.dataset.type === 'bubble') {
-              startEditing(el);
-            }
-          }
-          lastTap = now;
-        }, { passive: false });
-      }
-
-      // 开始编辑文本
-      function startEditing(el) {
-        if (el.querySelector('.editing')) return;
-        const contentEl = el.querySelector('.content') || el;
-        const originalText = contentEl.innerText || contentEl.textContent || '';
-        const type = el.dataset.type;
-
-        // 创建一个可编辑的 span
-        const editor = document.createElement('div');
-        editor.className = 'editing';
-        editor.contentEditable = 'true';
-        editor.style.outline = 'none';
-        editor.style.minWidth = '20px';
-        editor.textContent = originalText;
-
-        // 保存原始内容
-        contentEl.style.display = 'none';
-        el.appendChild(editor);
-        editor.focus();
-
-        // 选中全部文本
-        const range = document.createRange();
-        range.selectNodeContents(editor);
-        const sel = window.getSelection();
-        sel.removeAllRanges();
-        sel.addRange(range);
-
-        // 完成编辑
-        function finishEditing() {
-          const newText = editor.innerText || editor.textContent || '';
-          contentEl.textContent = newText;
-          contentEl.style.display = '';
-          editor.remove();
-          // 更新数据
-          el.dataset.text = newText;
-          // 重新绑定内容元素
-          if (el.dataset.type === 'bubble') {
-            // 对话框内容更新
-          }
-        }
-
-        editor.addEventListener('blur', finishEditing);
-        editor.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            editor.blur();
-          }
-          if (e.key === 'Escape') {
-            editor.textContent = originalText;
-            editor.blur();
-          }
-        });
-      }
-
-      // ============ 添加元素 ============
-      function addTextBlock(x, y, text = '双击编辑文字', color = currentColor, fontSize = currentFontSize) {
-        const id = genId();
-        const el = document.createElement('div');
-        el.className = 'draggable-item text-block';
-        el.dataset.id = id;
-        el.dataset.type = 'text';
-        el.dataset.color = color;
-        el.dataset.fontSize = fontSize;
-        el.dataset.text = text;
-        el.style.left = (x || 30) + 'px';
-        el.style.top = (y || 30) + 'px';
-        el.style.color = color;
-        el.style.fontSize = fontSize + 'px';
-
-        // 内容元素
-        const content = document.createElement('div');
-        content.className = 'content';
-        content.textContent = text;
-        content.style.pointerEvents = 'none';
-        el.appendChild(content);
-
-        // 删除按钮
-        const delBtn = document.createElement('div');
-        delBtn.className = 'delete-btn';
-        delBtn.textContent = '×';
-        delBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          if (confirm('删除这个文字？')) {
-            el.remove();
-            if (selectedItem === el) {
-              selectedItem = null;
-              updateToolbarState();
-            }
-          }
-        });
-        el.appendChild(delBtn);
-
-        // 缩放手柄
-        const resizeHandle = document.createElement('div');
-        resizeHandle.className = 'resize-handle';
-        setupResize(el, resizeHandle, 'fontSize');
-        el.appendChild(resizeHandle);
-
-        // 拖拽
-        makeDraggable(el);
-
-        // 点击选中
-        el.addEventListener('pointerdown', (e) => {
-          if (e.target.closest('.delete-btn') || e.target.closest('.resize-handle') || e.target.closest('.editing')) return;
-          selectItem(el);
-        });
-
-        overlayLayer.appendChild(el);
-        selectItem(el);
-        return el;
-      }
-
-      function addBubbleBlock(x, y, text = '对话内容', color = currentColor, fontSize = currentFontSize) {
-        const id = genId();
-        const el = document.createElement('div');
-        el.className = 'draggable-item bubble-block';
-        el.dataset.id = id;
-        el.dataset.type = 'bubble';
-        el.dataset.color = color;
-        el.dataset.fontSize = fontSize;
-        el.dataset.text = text;
-        el.style.left = (x || 50) + 'px';
-        el.style.top = (y || 50) + 'px';
-        el.style.color = color;
-        el.style.fontSize = fontSize + 'px';
-        // 对话框背景色默认使用浅色，文字颜色自动对比
-        el.style.background = '#ffffff';
-        el.style.color = '#1a1d21';
-
-        // 根据选择的颜色决定文字颜色
-        const applyBubbleStyle = (bgColor) => {
-          // 简单亮度判断
-          const hex = bgColor.replace('#', '');
-          const r = parseInt(hex.substr(0, 2), 16);
-          const g = parseInt(hex.substr(2, 2), 16);
-          const b = parseInt(hex.substr(4, 2), 16);
-          const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-          el.style.background = bgColor;
-          el.style.color = brightness > 128 ? '#1a1d21' : '#ffffff';
-          // 尾巴颜色跟随背景
-          el.style.setProperty('--bubble-bg', bgColor);
-        };
-        applyBubbleStyle(color);
-        el.dataset.color = color;
-
-        // 内容
-        const content = document.createElement('div');
-        content.className = 'content';
-        content.textContent = text;
-        content.style.pointerEvents = 'none';
-        el.appendChild(content);
-
-        // 删除按钮
-        const delBtn = document.createElement('div');
-        delBtn.className = 'delete-btn';
-        delBtn.textContent = '×';
-        delBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          if (confirm('删除这个对话框？')) {
-            el.remove();
-            if (selectedItem === el) {
-              selectedItem = null;
-              updateToolbarState();
-            }
-          }
-        });
-        el.appendChild(delBtn);
-
-        // 缩放手柄
-        const resizeHandle = document.createElement('div');
-        resizeHandle.className = 'resize-handle';
-        setupResize(el, resizeHandle, 'fontSize');
-        el.appendChild(resizeHandle);
-
-        makeDraggable(el);
-
-        el.addEventListener('pointerdown', (e) => {
-          if (e.target.closest('.delete-btn') || e.target.closest('.resize-handle') || e.target.closest('.editing')) return;
-          selectItem(el);
-        });
-
-        overlayLayer.appendChild(el);
-        selectItem(el);
-        return el;
-      }
-
-      // 设置缩放（字号）
-      function setupResize(el, handle, prop = 'fontSize') {
-        let startX = 0, startY = 0, startSize = 0;
-
-        handle.addEventListener('pointerdown', (e) => {
-          e.stopPropagation();
-          e.preventDefault();
-          startX = e.clientX;
-          startY = e.clientY;
-          startSize = parseInt(el.dataset.fontSize || '22', 10);
-          handle.setPointerCapture(e.pointerId);
-        });
-
-        handle.addEventListener('pointermove', (e) => {
-          if (!handle.hasPointerCapture(e.pointerId)) return;
-          e.preventDefault();
-          const dx = e.clientX - startX;
-          const dy = e.clientY - startY;
-          const delta = Math.max(dx, dy) / 2;
-          let newSize = Math.round(startSize + delta);
-          newSize = Math.max(12, Math.min(96, newSize));
-          el.dataset.fontSize = newSize;
-          el.style.fontSize = newSize + 'px';
-          // 如果是对话框，也需要调整
-          if (el.dataset.type === 'bubble') {
-            el.style.fontSize = newSize + 'px';
-          }
-          // 同步滑块
-          if (selectedItem === el) {
-            fontSizeSlider.value = newSize;
-            fontSizeVal.textContent = newSize;
-            currentFontSize = newSize;
-          }
-        });
-
-        handle.addEventListener('pointerup', (e) => {
-          try { handle.releasePointerCapture(e.pointerId); } catch (_) {}
-        });
-      }
-
-      // ============ 导入图片 ============
-      importBtn.addEventListener('click', () => {
-        fileInput.click();
-      });
-
-      fileInput.addEventListener('change', (e) => {
-        const
+          roundRect(ctx, x
