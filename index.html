@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>图片文字 · 对话框编辑器 Pro</title>
 
-<!-- ★ 动态加载 Google Fonts，确保字体生效 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&family=Noto+Serif+SC:wght@400;700&family=ZCOOL+KuaiLe&family=ZCOOL+QingKe+HuangYou&family=Ma+Shan+Zheng&family=Long+Cang&family=Zhi+Mang+Xing&family=Liu+Jian+Mao+Cao&family=Roboto:wght@400;700&family=Playfair+Display:wght@700&family=Pacifico&family=Bebas+Neue&display=swap" rel="stylesheet">
@@ -114,7 +113,7 @@
     outline-offset:4px;
   }
 
-  /* ============ 文字块 ============ */
+  /* 文字块 */
   .text-block {
     min-width:40px; padding:6px 10px;
     font-weight:700; font-size:22px; line-height:1.25;
@@ -123,7 +122,7 @@
     border-radius:6px;
   }
 
-  /* ============ 对话框 ============ */
+  /* 对话框 */
   .bubble-block {
     min-width:60px; padding:12px 16px;
     font-weight:600; font-size:16px; line-height:1.4;
@@ -138,15 +137,10 @@
 
   .shape-rounded { border-radius: 20px; }
   .shape-rect { border-radius: 8px; }
-  .shape-circle {
-    border-radius: 50%;
-  }
-  .shape-ellipse {
-    border-radius: 50%;
-  }
+  .shape-circle { border-radius: 50%; }
+  .shape-ellipse { border-radius: 50%; }
   .shape-thought {
-    border-radius: 50%;
-    position: relative;
+    border-radius: 50%; position: relative;
   }
   .shape-thought::before {
     content:''; position:absolute; bottom:-10px; left:15px;
@@ -172,63 +166,78 @@
     );
   }
 
-  /* 三角形尾巴 */
+  /* ★★★ 可调粗细和倾斜的三角形尾巴（用 CSS 变量控制） ★★★ */
   .bubble-block::after {
     content: '';
     position: absolute;
     width: 0;
     height: 0;
     display: none;
+    /* 由 CSS 变量控制：--tail-size（粗细）、--tail-skew（倾斜度） */
+    transform: rotate(var(--tail-rotate, 0deg));
   }
+
   .tail-bottom-left::after {
     display: block;
-    bottom: -14px;
+    bottom: calc(-1 * var(--tail-size, 14px));
     left: 22px;
-    border-left: 12px solid transparent;
-    border-right: 12px solid transparent;
-    border-top: 14px solid var(--tail-color, #ffffff);
+    border-left: var(--tail-size, 14px) solid transparent;
+    border-right: var(--tail-size, 14px) solid transparent;
+    border-top: var(--tail-size, 14px) solid var(--tail-color, #ffffff);
+    transform: skewX(var(--tail-skew, 0deg));
+    transform-origin: top left;
   }
   .tail-bottom-right::after {
     display: block;
-    bottom: -14px;
+    bottom: calc(-1 * var(--tail-size, 14px));
     right: 22px;
-    border-left: 12px solid transparent;
-    border-right: 12px solid transparent;
-    border-top: 14px solid var(--tail-color, #ffffff);
+    border-left: var(--tail-size, 14px) solid transparent;
+    border-right: var(--tail-size, 14px) solid transparent;
+    border-top: var(--tail-size, 14px) solid var(--tail-color, #ffffff);
+    transform: skewX(var(--tail-skew, 0deg));
+    transform-origin: top right;
   }
   .tail-top-left::after {
     display: block;
-    top: -14px;
+    top: calc(-1 * var(--tail-size, 14px));
     left: 22px;
-    border-left: 12px solid transparent;
-    border-right: 12px solid transparent;
-    border-bottom: 14px solid var(--tail-color, #ffffff);
+    border-left: var(--tail-size, 14px) solid transparent;
+    border-right: var(--tail-size, 14px) solid transparent;
+    border-bottom: var(--tail-size, 14px) solid var(--tail-color, #ffffff);
+    transform: skewX(var(--tail-skew, 0deg));
+    transform-origin: bottom left;
   }
   .tail-top-right::after {
     display: block;
-    top: -14px;
+    top: calc(-1 * var(--tail-size, 14px));
     right: 22px;
-    border-left: 12px solid transparent;
-    border-right: 12px solid transparent;
-    border-bottom: 14px solid var(--tail-color, #ffffff);
+    border-left: var(--tail-size, 14px) solid transparent;
+    border-right: var(--tail-size, 14px) solid transparent;
+    border-bottom: var(--tail-size, 14px) solid var(--tail-color, #ffffff);
+    transform: skewX(var(--tail-skew, 0deg));
+    transform-origin: bottom right;
   }
   .tail-left::after {
     display: block;
-    left: -14px;
+    left: calc(-1 * var(--tail-size, 14px));
     top: 50%;
-    transform: translateY(-50%);
-    border-top: 12px solid transparent;
-    border-bottom: 12px solid transparent;
-    border-right: 14px solid var(--tail-color, #ffffff);
+    margin-top: calc(-1 * var(--tail-size, 14px) / 2);
+    border-top: var(--tail-size, 14px) solid transparent;
+    border-bottom: var(--tail-size, 14px) solid transparent;
+    border-right: var(--tail-size, 14px) solid var(--tail-color, #ffffff);
+    transform: skewY(var(--tail-skew, 0deg));
+    transform-origin: right center;
   }
   .tail-right::after {
     display: block;
-    right: -14px;
+    right: calc(-1 * var(--tail-size, 14px));
     top: 50%;
-    transform: translateY(-50%);
-    border-top: 12px solid transparent;
-    border-bottom: 12px solid transparent;
-    border-left: 14px solid var(--tail-color, #ffffff);
+    margin-top: calc(-1 * var(--tail-size, 14px) / 2);
+    border-top: var(--tail-size, 14px) solid transparent;
+    border-bottom: var(--tail-size, 14px) solid transparent;
+    border-left: var(--tail-size, 14px) solid var(--tail-color, #ffffff);
+    transform: skewY(var(--tail-skew, 0deg));
+    transform-origin: left center;
   }
   .tail-none::after { display: none !important; }
 
@@ -250,10 +259,11 @@
   }
   .draggable-item.selected .delete-btn { display:flex; }
 
+  /* ============ 工具栏 ============ */
   .toolbar {
     flex-shrink:0; padding:10px 16px 6px 16px;
     display:flex; flex-direction:column; gap:8px;
-    max-height: 46vh; overflow-y: auto;
+    max-height: 48vh; overflow-y: auto;
   }
   .tool-row { display:flex; gap:6px; justify-content:center; flex-wrap:wrap; }
   .tool-btn {
@@ -267,6 +277,7 @@
   .tool-btn .ico { font-size:16px; line-height:1; }
   .tool-btn:disabled { opacity:.4; pointer-events:none; }
 
+  /* 样式滚动条 */
   .style-scroll {
     display: flex;
     gap: 6px;
@@ -296,15 +307,74 @@
     color: #fff;
   }
 
+  /* ============ 折叠面板 ============ */
   .panel {
     background: #181c21;
     border-radius: 14px;
-    padding: 8px 10px;
     border: 1px solid #262a30;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+    overflow: hidden;
   }
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    cursor: pointer;
+    user-select: none;
+    color: #cbd5e1;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .panel-header:active { background: #1f242b; }
+  .panel-header .arrow {
+    color: #6e7887;
+    font-size: 12px;
+    transition: transform 0.2s ease;
+  }
+  .panel.open .panel-header .arrow {
+    transform: rotate(180deg);
+  }
+  .panel-body {
+    display: none;
+    padding: 0 12px 12px 12px;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .panel.open .panel-body { display: flex; }
+
+  /* 面板底部取消按钮 */
+  .panel-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding-top: 8px;
+    border-top: 1px solid #262a30;
+    margin-top: 4px;
+  }
+  .btn-cancel {
+    padding: 6px 14px;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 20px;
+    border: 1px solid #3a4048;
+    background: transparent;
+    color: #a0aab8;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .btn-cancel:active { background: #2a3038; }
+  .btn-apply {
+    padding: 6px 14px;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 20px;
+    border: none;
+    background: #3b7cff;
+    color: #fff;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .btn-apply:active { background: #2e6bef; }
 
   .section-label {
     display: flex;
@@ -340,12 +410,12 @@
     text-shadow: 0 1px 3px rgba(0,0,0,.9), 0 0 4px rgba(0,0,0,.6);
     pointer-events: none;
   }
-  /* 浅色圆点上的对勾用深色 */
   .color-dot.active[data-color="#ffffff"]::before,
   .color-dot.active[data-bg-color="#ffffff"]::before,
   .color-dot.active[data-border-color="#ffffff"]::before,
   .color-dot.active[data-bg-color="#feca57"]::before,
-  .color-dot.active[data-border-color="#feca57"]::before {
+  .color-dot.active[data-border-color="#feca57"]::before,
+  .color-dot.active[data-color="#feca57"]::before {
     color: #1a1d21;
     text-shadow: 0 1px 2px rgba(255,255,255,.5);
   }
@@ -523,7 +593,8 @@
     </div>
   </div>
 
-  <div class="toolbar">
+  <!-- ★ 工具栏：未选中时只显示工具按钮 -->
+  <div class="toolbar" id="toolbar">
     <!-- 工具按钮 -->
     <div class="tool-row">
       <button class="tool-btn" id="addTextBtn" type="button" disabled>
@@ -543,113 +614,173 @@
       </button>
     </div>
 
-    <!-- 对话框样式 -->
-    <div class="style-scroll" id="styleScroll" style="display:none;">
-      <div class="style-chip active" data-style="rounded">💬 圆角</div>
-      <div class="style-chip" data-style="rect">▭ 矩形</div>
-      <div class="style-chip" data-style="ellipse">⬭ 椭圆</div>
-      <div class="style-chip" data-style="thought">💭 想象</div>
-      <div class="style-chip" data-style="narration">📖 旁白</div>
-      <div class="style-chip" data-style="exclaim">💥 爆炸</div>
-    </div>
+    <!-- ★★★ 规格面板（只在选中元素时显示，可折叠，互不遮挡） ★★★ -->
+    <div id="specArea" style="display:none; flex-direction:column; gap:8px;">
 
-    <!-- 尾巴方向 -->
-    <div class="style-scroll" id="tailScroll" style="display:none;">
-      <div class="style-chip active" data-tail="none">无尾巴</div>
-      <div class="style-chip" data-tail="bottom-left">↙ 左下</div>
-      <div class="style-chip" data-tail="bottom-right">↘ 右下</div>
-      <div class="style-chip" data-tail="top-left">↖ 左上</div>
-      <div class="style-chip" data-tail="top-right">↗ 右上</div>
-      <div class="style-chip" data-tail="left">← 左</div>
-      <div class="style-chip" data-tail="right">→ 右</div>
-    </div>
-
-    <!-- 颜色面板 -->
-    <div class="panel" id="colorPanel">
-      <div class="section-label"><span>文字颜色</span></div>
-      <div class="color-row" id="textColorRow">
-        <div class="color-dot" data-color="#ffffff" style="background:#ffffff;"></div>
-        <div class="color-dot active" data-color="#1a1d21" style="background:#1a1d21;"></div>
-        <div class="color-dot" data-color="#ff4757" style="background:#ff4757;"></div>
-        <div class="color-dot" data-color="#2ed573" style="background:#2ed573;"></div>
-        <div class="color-dot" data-color="#3b7cff" style="background:#3b7cff;"></div>
-        <div class="color-dot" data-color="#feca57" style="background:#feca57;"></div>
-        <div class="color-dot" data-color="#a55eea" style="background:#a55eea;"></div>
-        <div class="color-dot custom" data-custom="text" title="自定义颜色"></div>
+      <!-- 1. 样式面板 -->
+      <div class="panel" id="stylePanel">
+        <div class="panel-header" data-toggle="stylePanel">
+          <span>🎨 样式</span>
+          <span class="arrow">▼</span>
+        </div>
+        <div class="panel-body">
+          <div class="style-scroll" id="styleScroll">
+            <div class="style-chip active" data-style="rounded">💬 圆角</div>
+            <div class="style-chip" data-style="rect">▭ 矩形</div>
+            <div class="style-chip" data-style="ellipse">⬭ 椭圆</div>
+            <div class="style-chip" data-style="thought">💭 想象</div>
+            <div class="style-chip" data-style="narration">📖 旁白</div>
+            <div class="style-chip" data-style="exclaim">💥 爆炸</div>
+          </div>
+          <div class="panel-actions">
+            <button class="btn-cancel" data-cancel="style">取消调整</button>
+          </div>
+        </div>
       </div>
 
-      <div class="section-label" id="bgColorLabel" style="display:none;"><span>背景颜色</span></div>
-      <div class="color-row" id="bgColorRow" style="display:none;">
-        <div class="color-dot active" data-bg-color="#ffffff" style="background:#ffffff;"></div>
-        <div class="color-dot" data-bg-color="#feca57" style="background:#feca57;"></div>
-        <div class="color-dot" data-bg-color="#ff4757" style="background:#ff4757;"></div>
-        <div class="color-dot" data-bg-color="#2ed573" style="background:#2ed573;"></div>
-        <div class="color-dot" data-bg-color="#3b7cff" style="background:#3b7cff;"></div>
-        <div class="color-dot" data-bg-color="#a55eea" style="background:#a55eea;"></div>
-        <div class="color-dot" data-bg-color="#1a1d21" style="background:#1a1d21;"></div>
-        <div class="color-dot custom" data-custom="bg" title="自定义背景色"></div>
+      <!-- 2. 尾巴面板 -->
+      <div class="panel" id="tailPanel">
+        <div class="panel-header" data-toggle="tailPanel">
+          <span>🔺 尾巴</span>
+          <span class="arrow">▼</span>
+        </div>
+        <div class="panel-body">
+          <div class="style-scroll" id="tailScroll">
+            <div class="style-chip active" data-tail="none">无尾巴</div>
+            <div class="style-chip" data-tail="bottom-left">↙ 左下</div>
+            <div class="style-chip" data-tail="bottom-right">↘ 右下</div>
+            <div class="style-chip" data-tail="top-left">↖ 左上</div>
+            <div class="style-chip" data-tail="top-right">↗ 右上</div>
+            <div class="style-chip" data-tail="left">← 左</div>
+            <div class="style-chip" data-tail="right">→ 右</div>
+          </div>
+          <!-- ★ 尾巴粗细/倾斜 -->
+          <div class="slider-row" id="tailSizeRow" style="display:none;">
+            <span class="lbl">粗细</span>
+            <input type="range" id="tailSizeSlider" min="6" max="30" value="14" step="1">
+            <span class="val" id="tailSizeVal">14</span>
+          </div>
+          <div class="slider-row" id="tailSkewRow" style="display:none;">
+            <span class="lbl">倾斜</span>
+            <input type="range" id="tailSkewSlider" min="-45" max="45" value="0" step="1">
+            <span class="val" id="tailSkewVal">0°</span>
+          </div>
+          <div class="panel-actions">
+            <button class="btn-cancel" data-cancel="tail">取消调整</button>
+          </div>
+        </div>
       </div>
 
-      <div class="section-label" id="borderColorLabel" style="display:none;"><span>边框颜色</span></div>
-      <div class="color-row" id="borderColorRow" style="display:none;">
-        <div class="color-dot active" data-border-color="#1a1d21" style="background:#1a1d21;"></div>
-        <div class="color-dot" data-border-color="#ffffff" style="background:#ffffff;"></div>
-        <div class="color-dot" data-border-color="#ff4757" style="background:#ff4757;"></div>
-        <div class="color-dot" data-border-color="#2ed573" style="background:#2ed573;"></div>
-        <div class="color-dot" data-border-color="#3b7cff" style="background:#3b7cff;"></div>
-        <div class="color-dot" data-border-color="#feca57" style="background:#feca57;"></div>
-        <div class="color-dot" data-border-color="#a55eea" style="background:#a55eea;"></div>
-        <div class="color-dot custom" data-custom="border" title="自定义边框色"></div>
-      </div>
-    </div>
+      <!-- 3. 颜色面板 -->
+      <div class="panel" id="colorPanel">
+        <div class="panel-header" data-toggle="colorPanel">
+          <span>🎨 颜色</span>
+          <span class="arrow">▼</span>
+        </div>
+        <div class="panel-body">
+          <div class="section-label"><span>文字颜色</span></div>
+          <div class="color-row" id="textColorRow">
+            <div class="color-dot" data-color="#ffffff" style="background:#ffffff;"></div>
+            <div class="color-dot active" data-color="#1a1d21" style="background:#1a1d21;"></div>
+            <div class="color-dot" data-color="#ff4757" style="background:#ff4757;"></div>
+            <div class="color-dot" data-color="#2ed573" style="background:#2ed573;"></div>
+            <div class="color-dot" data-color="#3b7cff" style="background:#3b7cff;"></div>
+            <div class="color-dot" data-color="#feca57" style="background:#feca57;"></div>
+            <div class="color-dot" data-color="#a55eea" style="background:#a55eea;"></div>
+            <div class="color-dot custom" data-custom="text" title="自定义颜色"></div>
+          </div>
 
-    <!-- 滑块面板（字号/宽/高/内边距/透明度/边框/圆角） -->
-    <div class="panel" id="sliderPanel">
-      <div class="slider-row">
-        <span class="lbl">字号</span>
-        <input type="range" id="fontSizeSlider" min="12" max="96" value="22" step="1" disabled>
-        <span class="val" id="fontSizeVal">22</span>
-      </div>
+          <div class="section-label" id="bgColorLabel" style="display:none;"><span>背景颜色</span></div>
+          <div class="color-row" id="bgColorRow" style="display:none;">
+            <div class="color-dot active" data-bg-color="#ffffff" style="background:#ffffff;"></div>
+            <div class="color-dot" data-bg-color="#feca57" style="background:#feca57;"></div>
+            <div class="color-dot" data-bg-color="#ff4757" style="background:#ff4757;"></div>
+            <div class="color-dot" data-bg-color="#2ed573" style="background:#2ed573;"></div>
+            <div class="color-dot" data-bg-color="#3b7cff" style="background:#3b7cff;"></div>
+            <div class="color-dot" data-bg-color="#a55eea" style="background:#a55eea;"></div>
+            <div class="color-dot" data-bg-color="#1a1d21" style="background:#1a1d21;"></div>
+            <div class="color-dot custom" data-custom="bg" title="自定义背景色"></div>
+          </div>
 
-      <!-- ★ 自定义宽度 -->
-      <div class="slider-row" id="widthRow" style="display:none;">
-        <span class="lbl">宽度</span>
-        <input type="range" id="widthSlider" min="40" max="400" value="120" step="1">
-        <span class="val" id="widthVal">120</span>
-      </div>
+          <div class="section-label" id="borderColorLabel" style="display:none;"><span>边框颜色</span></div>
+          <div class="color-row" id="borderColorRow" style="display:none;">
+            <div class="color-dot active" data-border-color="#1a1d21" style="background:#1a1d21;"></div>
+            <div class="color-dot" data-border-color="#ffffff" style="background:#ffffff;"></div>
+            <div class="color-dot" data-border-color="#ff4757" style="background:#ff4757;"></div>
+            <div class="color-dot" data-border-color="#2ed573" style="background:#2ed573;"></div>
+            <div class="color-dot" data-border-color="#3b7cff" style="background:#3b7cff;"></div>
+            <div class="color-dot" data-border-color="#feca57" style="background:#feca57;"></div>
+            <div class="color-dot" data-border-color="#a55eea" style="background:#a55eea;"></div>
+            <div class="color-dot custom" data-custom="border" title="自定义边框色"></div>
+          </div>
 
-      <!-- ★ 自定义高度 -->
-      <div class="slider-row" id="heightRow" style="display:none;">
-        <span class="lbl">高度</span>
-        <input type="range" id="heightSlider" min="30" max="400" value="60" step="1">
-        <span class="val" id="heightVal">60</span>
-      </div>
-
-      <div class="slider-row" id="paddingRow" style="display:none;">
-        <span class="lbl">内边距</span>
-        <input type="range" id="paddingSlider" min="0" max="60" value="12" step="1">
-        <span class="val" id="paddingVal">12</span>
-      </div>
-
-      <!-- ★ 透明度：始终显示 -->
-      <div class="slider-row" id="opacityRow">
-        <span class="lbl">透明度</span>
-        <input type="range" id="opacitySlider" min="10" max="100" value="100" step="1" disabled>
-        <span class="val" id="opacityVal">100</span>
-      </div>
-
-      <!-- ★ 边框粗细：始终显示 -->
-      <div class="slider-row" id="borderRow">
-        <span class="lbl">边框</span>
-        <input type="range" id="borderSlider" min="0" max="10" value="0" step="1" disabled>
-        <span class="val" id="borderVal">0</span>
+          <div class="panel-actions">
+            <button class="btn-cancel" data-cancel="color">取消调整</button>
+          </div>
+        </div>
       </div>
 
-      <div class="slider-row" id="radiusRow" style="display:none;">
-        <span class="lbl">圆角</span>
-        <input type="range" id="radiusSlider" min="0" max="60" value="20" step="1">
-        <span class="val" id="radiusVal">20</span>
+      <!-- 4. 尺寸面板 -->
+      <div class="panel" id="sizePanel">
+        <div class="panel-header" data-toggle="sizePanel">
+          <span>📐 尺寸</span>
+          <span class="arrow">▼</span>
+        </div>
+        <div class="panel-body">
+          <div class="slider-row">
+            <span class="lbl">字号</span>
+            <input type="range" id="fontSizeSlider" min="12" max="96" value="22" step="1" disabled>
+            <span class="val" id="fontSizeVal">22</span>
+          </div>
+          <div class="slider-row" id="widthRow" style="display:none;">
+            <span class="lbl">宽度</span>
+            <input type="range" id="widthSlider" min="40" max="400" value="120" step="1">
+            <span class="val" id="widthVal">120</span>
+          </div>
+          <div class="slider-row" id="heightRow" style="display:none;">
+            <span class="lbl">高度</span>
+            <input type="range" id="heightSlider" min="30" max="400" value="60" step="1">
+            <span class="val" id="heightVal">60</span>
+          </div>
+          <div class="slider-row" id="paddingRow" style="display:none;">
+            <span class="lbl">内边距</span>
+            <input type="range" id="paddingSlider" min="0" max="60" value="12" step="1">
+            <span class="val" id="paddingVal">12</span>
+          </div>
+          <div class="slider-row" id="radiusRow" style="display:none;">
+            <span class="lbl">圆角</span>
+            <input type="range" id="radiusSlider" min="0" max="60" value="20" step="1">
+            <span class="val" id="radiusVal">20</span>
+          </div>
+          <div class="panel-actions">
+            <button class="btn-cancel" data-cancel="size">取消调整</button>
+          </div>
+        </div>
       </div>
+
+      <!-- 5. 边框面板 -->
+      <div class="panel" id="borderPanel">
+        <div class="panel-header" data-toggle="borderPanel">
+          <span>🖌️ 边框 / 透明度</span>
+          <span class="arrow">▼</span>
+        </div>
+        <div class="panel-body">
+          <div class="slider-row" id="borderRow">
+            <span class="lbl">边框</span>
+            <input type="range" id="borderSlider" min="0" max="10" value="0" step="1" disabled>
+            <span class="val" id="borderVal">0</span>
+          </div>
+          <div class="slider-row" id="opacityRow">
+            <span class="lbl">透明度</span>
+            <input type="range" id="opacitySlider" min="10" max="100" value="100" step="1" disabled>
+            <span class="val" id="opacityVal">100</span>
+          </div>
+          <div class="panel-actions">
+            <button class="btn-cancel" data-cancel="border">取消调整</button>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -658,7 +789,6 @@
 
   <input type="color" id="colorPicker" style="position:absolute;opacity:0;pointer-events:none;width:1px;height:1px;">
 
-  <!-- 字体弹层 -->
   <div class="font-picker-overlay" id="fontPickerOverlay">
     <div class="font-picker" id="fontPicker">
       <h3>
@@ -699,6 +829,10 @@
   var borderVal = document.getElementById('borderVal');
   var radiusSlider = document.getElementById('radiusSlider');
   var radiusVal = document.getElementById('radiusVal');
+  var tailSizeSlider = document.getElementById('tailSizeSlider');
+  var tailSizeVal = document.getElementById('tailSizeVal');
+  var tailSkewSlider = document.getElementById('tailSkewSlider');
+  var tailSkewVal = document.getElementById('tailSkewVal');
   var textColorRow = document.getElementById('textColorRow');
   var bgColorRow = document.getElementById('bgColorRow');
   var borderColorRow = document.getElementById('borderColorRow');
@@ -709,8 +843,11 @@
   var paddingRow = document.getElementById('paddingRow');
   var borderRow = document.getElementById('borderRow');
   var radiusRow = document.getElementById('radiusRow');
+  var tailSizeRow = document.getElementById('tailSizeRow');
+  var tailSkewRow = document.getElementById('tailSkewRow');
   var styleScroll = document.getElementById('styleScroll');
   var tailScroll = document.getElementById('tailScroll');
+  var specArea = document.getElementById('specArea');
   var toast = document.getElementById('toast');
   var editorStage = document.getElementById('editorStage');
   var canvasWrap = document.getElementById('canvasWrap');
@@ -731,31 +868,35 @@
   var currentOpacity = 100;
   var currentBorderWidth = 0;
   var currentRadius = 20;
+  var currentTailSize = 14;
+  var currentTailSkew = 0;
   var currentFont = '"Noto Sans SC", system-ui, sans-serif';
   var itemIdCounter = 0;
   var pendingCustomType = null;
 
-  // ★ 字体列表（Google Fonts + 系统字体）
+  // 用于取消调整的备份
+  var backupState = null;
+
   var FONTS = [
-    { name: '系统默认', value: 'system-ui, -apple-system, sans-serif', loaded: true },
-    { name: 'Noto Sans SC 思源黑体', value: '"Noto Sans SC", sans-serif', loaded: true },
-    { name: 'Noto Serif SC 思源宋体', value: '"Noto Serif SC", serif', loaded: true },
-    { name: 'ZCOOL KuaiLe 站酷快乐体', value: '"ZCOOL KuaiLe", cursive', loaded: true },
-    { name: 'ZCOOL QingKe 站酷庆科黄油', value: '"ZCOOL QingKe HuangYou", cursive', loaded: true },
-    { name: 'Ma Shan Zheng 马善政毛笔', value: '"Ma Shan Zheng", cursive', loaded: true },
-    { name: 'Long Cang 龙藏体', value: '"Long Cang", cursive', loaded: true },
-    { name: 'Zhi Mang Xing 志莽行书', value: '"Zhi Mang Xing", cursive', loaded: true },
-    { name: 'Liu Jian Mao Cao 柳建毛草', value: '"Liu Jian Mao Cao", cursive', loaded: true },
-    { name: 'Roboto', value: '"Roboto", sans-serif', loaded: true },
-    { name: 'Playfair Display', value: '"Playfair Display", serif', loaded: true },
-    { name: 'Pacifico', value: '"Pacifico", cursive', loaded: true },
-    { name: 'Bebas Neue', value: '"Bebas Neue", sans-serif', loaded: true },
-    { name: 'Arial', value: 'Arial, Helvetica, sans-serif', loaded: true },
-    { name: 'Times New Roman', value: '"Times New Roman", Times, serif', loaded: true },
-    { name: 'Courier New', value: '"Courier New", Courier, monospace', loaded: true },
-    { name: 'Georgia', value: 'Georgia, serif', loaded: true },
-    { name: 'Comic Sans MS', value: '"Comic Sans MS", cursive', loaded: true },
-    { name: 'Impact', value: 'Impact, sans-serif', loaded: true }
+    { name: '系统默认', value: 'system-ui, -apple-system, sans-serif' },
+    { name: 'Noto Sans SC 思源黑体', value: '"Noto Sans SC", sans-serif' },
+    { name: 'Noto Serif SC 思源宋体', value: '"Noto Serif SC", serif' },
+    { name: 'ZCOOL KuaiLe 站酷快乐体', value: '"ZCOOL KuaiLe", cursive' },
+    { name: 'ZCOOL QingKe 站酷庆科黄油', value: '"ZCOOL QingKe HuangYou", cursive' },
+    { name: 'Ma Shan Zheng 马善政毛笔', value: '"Ma Shan Zheng", cursive' },
+    { name: 'Long Cang 龙藏体', value: '"Long Cang", cursive' },
+    { name: 'Zhi Mang Xing 志莽行书', value: '"Zhi Mang Xing", cursive' },
+    { name: 'Liu Jian Mao Cao 柳建毛草', value: '"Liu Jian Mao Cao", cursive' },
+    { name: 'Roboto', value: '"Roboto", sans-serif' },
+    { name: 'Playfair Display', value: '"Playfair Display", serif' },
+    { name: 'Pacifico', value: '"Pacifico", cursive' },
+    { name: 'Bebas Neue', value: '"Bebas Neue", sans-serif' },
+    { name: 'Arial', value: 'Arial, Helvetica, sans-serif' },
+    { name: 'Times New Roman', value: '"Times New Roman", Times, serif' },
+    { name: 'Courier New', value: '"Courier New", Courier, monospace' },
+    { name: 'Georgia', value: 'Georgia, serif' },
+    { name: 'Comic Sans MS', value: '"Comic Sans MS", cursive' },
+    { name: 'Impact', value: 'Impact, sans-serif' }
   ];
 
   function showToast(msg, duration) {
@@ -770,12 +911,44 @@
     loadingMask.classList.toggle('show', show);
   }
 
+  // ==================== 面板折叠 ====================
+  document.querySelectorAll('.panel-header').forEach(function(header) {
+    header.addEventListener('click', function() {
+      var panel = header.parentElement;
+      panel.classList.toggle('open');
+    });
+  });
+
+  // ★ 取消调整按钮
+  document.querySelectorAll('[data-cancel]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var type = btn.dataset.cancel;
+      if (type === 'color') {
+        // 恢复颜色
+        if (selectedItem) {
+          applyBubbleStyle(selectedItem);
+          applyTextStyle(selectedItem);
+        }
+        showToast('已取消颜色调整');
+      } else if (type === 'style') {
+        showToast('已取消样式调整');
+      } else if (type === 'tail') {
+        showToast('已取消尾巴调整');
+      } else if (type === 'size') {
+        showToast('已取消尺寸调整');
+      } else if (type === 'border') {
+        showToast('已取消边框调整');
+      }
+    });
+  });
+
+  // ==================== 选中/取消选中 ====================
   function deselectAll() {
     var items = document.querySelectorAll('.draggable-item.selected');
     for (var i = 0; i < items.length; i++) items[i].classList.remove('selected');
     selectedItem = null;
     updateToolbarState();
-    updateStylePanel();
+    updateSpecArea();
   }
 
   function selectItem(el) {
@@ -788,7 +961,7 @@
       syncColorsFromItem(el);
     }
     updateToolbarState();
-    updateStylePanel();
+    updateSpecArea();
   }
 
   function syncSlidersFromItem(el) {
@@ -798,13 +971,11 @@
     fontSizeVal.textContent = fs;
     fontSizeSlider.disabled = false;
 
-    // ★ 宽度
     var w = parseInt(el.dataset.width || el.offsetWidth || '120', 10);
     currentWidth = w;
     widthSlider.value = w;
     widthVal.textContent = w;
 
-    // ★ 高度
     var h = parseInt(el.dataset.height || el.offsetHeight || '60', 10);
     currentHeight = h;
     heightSlider.value = h;
@@ -831,6 +1002,16 @@
     currentRadius = rd;
     radiusSlider.value = rd;
     radiusVal.textContent = rd;
+
+    var ts = parseInt(el.dataset.tailSize || '14', 10);
+    currentTailSize = ts;
+    tailSizeSlider.value = ts;
+    tailSizeVal.textContent = ts;
+
+    var tk = parseInt(el.dataset.tailSkew || '0', 10);
+    currentTailSkew = tk;
+    tailSkewSlider.value = tk;
+    tailSkewVal.textContent = tk + '°';
 
     if (el.dataset.font) currentFont = el.dataset.font;
   }
@@ -860,14 +1041,10 @@
       dots[i].classList.toggle('active', match);
       if (match) found = true;
     }
-    // 如果没有匹配的预设色，则激活自定义按钮
+    // 如果没有匹配的预设色，则所有预设取消高亮
     if (!found) {
-      var custom = row.querySelector('.color-dot.custom');
-      if (custom) {
-        // 自定义按钮不做高亮，仅取消所有预设高亮
-        for (var j = 0; j < dots.length; j++) {
-          if (!dots[j].dataset.custom) dots[j].classList.remove('active');
-        }
+      for (var j = 0; j < dots.length; j++) {
+        if (!dots[j].dataset.custom) dots[j].classList.remove('active');
       }
     }
   }
@@ -880,10 +1057,8 @@
     resetBtn.disabled = !hasImage;
     deleteSelectedBtn.disabled = !selectedItem;
 
-    // 透明度/边框：有选中元素就启用
     if (selectedItem) {
       opacitySlider.disabled = false;
-      // 只有对话框才启用边框
       borderSlider.disabled = selectedItem.dataset.type !== 'bubble';
     } else {
       opacitySlider.disabled = true;
@@ -891,54 +1066,53 @@
     }
   }
 
-  function updateStylePanel() {
+  // ★★★ 更新规格区显示：只在选中元素时显示 ★★★
+  function updateSpecArea() {
     if (!selectedItem) {
-      styleScroll.style.display = 'none';
-      tailScroll.style.display = 'none';
-      bgColorRow.style.display = 'none';
-      bgColorLabel.style.display = 'none';
-      borderColorRow.style.display = 'none';
-      borderColorLabel.style.display = 'none';
-      widthRow.style.display = 'none';
-      heightRow.style.display = 'none';
-      paddingRow.style.display = 'none';
-      radiusRow.style.display = 'none';
+      specArea.style.display = 'none';
       return;
     }
 
+    specArea.style.display = 'flex';
     var type = selectedItem.dataset.type;
 
-    if (type === 'bubble') {
-      styleScroll.style.display = 'flex';
-      tailScroll.style.display = 'flex';
-      bgColorRow.style.display = 'flex';
-      bgColorLabel.style.display = 'block';
-      borderColorRow.style.display = 'flex';
-      borderColorLabel.style.display = 'block';
-      widthRow.style.display = 'flex';
-      heightRow.style.display = 'flex';
-      paddingRow.style.display = 'flex';
-      radiusRow.style.display = 'flex';
+    // 样式面板：只对对话框显示
+    document.getElementById('stylePanel').style.display = type === 'bubble' ? 'block' : 'none';
+    // 尾巴面板：只对对话框显示
+    document.getElementById('tailPanel').style.display = type === 'bubble' ? 'block' : 'none';
+    // 颜色面板：都显示
+    document.getElementById('colorPanel').style.display = 'block';
+    // 尺寸面板：都显示
+    document.getElementById('sizePanel').style.display = 'block';
+    // 边框面板：都显示
+    document.getElementById('borderPanel').style.display = 'block';
 
+    // 颜色面板中背景/边框颜色：只对对话框显示
+    bgColorRow.style.display = type === 'bubble' ? 'flex' : 'none';
+    bgColorLabel.style.display = type === 'bubble' ? 'block' : 'none';
+    borderColorRow.style.display = type === 'bubble' ? 'flex' : 'none';
+    borderColorLabel.style.display = type === 'bubble' ? 'block' : 'none';
+
+    // 尺寸面板中宽高/内边距/圆角：只对对话框显示
+    widthRow.style.display = type === 'bubble' ? 'flex' : 'none';
+    heightRow.style.display = type === 'bubble' ? 'flex' : 'none';
+    paddingRow.style.display = type === 'bubble' ? 'flex' : 'none';
+    radiusRow.style.display = type === 'bubble' ? 'flex' : 'none';
+
+    // 尾巴滑块：选了尾巴才显示
+    if (type === 'bubble') {
+      var tail = selectedItem.dataset.tail || 'none';
+      tailSizeRow.style.display = tail !== 'none' ? 'flex' : 'none';
+      tailSkewRow.style.display = tail !== 'none' ? 'flex' : 'none';
+
+      // 高亮当前样式
       var style = selectedItem.dataset.style || 'rounded';
       styleScroll.querySelectorAll('.style-chip').forEach(function(chip) {
         chip.classList.toggle('active', chip.dataset.style === style);
       });
-      var tail = selectedItem.dataset.tail || 'none';
       tailScroll.querySelectorAll('.style-chip').forEach(function(chip) {
         chip.classList.toggle('active', chip.dataset.tail === tail);
       });
-    } else {
-      styleScroll.style.display = 'none';
-      tailScroll.style.display = 'none';
-      bgColorRow.style.display = 'none';
-      bgColorLabel.style.display = 'none';
-      borderColorRow.style.display = 'none';
-      borderColorLabel.style.display = 'none';
-      widthRow.style.display = 'none';
-      heightRow.style.display = 'none';
-      paddingRow.style.display = 'none';
-      radiusRow.style.display = 'none';
     }
   }
 
@@ -1017,7 +1191,6 @@
     }, { passive: false });
   }
 
-  // ==================== 编辑 ====================
   function startEditing(el) {
     if (el.querySelector('.editing')) return;
     var contentEl = el.querySelector('.content');
@@ -1057,7 +1230,6 @@
     });
   }
 
-  // ==================== 缩放 ====================
   function setupResize(el, handle) {
     var startX = 0, startY = 0, startSize = 0, resizing = false;
 
@@ -1107,6 +1279,8 @@
     var font = el.dataset.font || currentFont;
     var width = parseInt(el.dataset.width || '0', 10);
     var height = parseInt(el.dataset.height || '0', 10);
+    var tailSize = parseInt(el.dataset.tailSize || '14', 10);
+    var tailSkew = parseInt(el.dataset.tailSkew || '0', 10);
 
     el.className = 'draggable-item bubble-block';
     el.classList.add('shape-' + style);
@@ -1128,11 +1302,14 @@
     el.style.opacity = (opacity / 100).toString();
     el.style.fontFamily = font;
 
-    // ★ 自定义宽高
     if (width > 0) el.style.width = width + 'px';
     if (height > 0) el.style.height = height + 'px';
 
-    // 文字颜色
+    // ★ 尾巴颜色/粗细/倾斜
+    el.style.setProperty('--tail-color', bgColor);
+    el.style.setProperty('--tail-size', tailSize + 'px');
+    el.style.setProperty('--tail-skew', tailSkew + 'deg');
+
     var textColor = el.dataset.color;
     if (!textColor) {
       var hex = bgColor.replace('#', '');
@@ -1145,8 +1322,6 @@
     } else {
       el.style.color = textColor;
     }
-
-    el.style.setProperty('--tail-color', bgColor);
   }
 
   function applyTextStyle(el) {
@@ -1188,7 +1363,7 @@
     delBtn.addEventListener('click', function(e) {
       e.stopPropagation();
       el.remove();
-      if (selectedItem === el) { selectedItem = null; updateToolbarState(); updateStylePanel(); }
+      if (selectedItem === el) { selectedItem = null; updateToolbarState(); updateSpecArea(); }
     });
     el.appendChild(delBtn);
 
@@ -1227,6 +1402,8 @@
     el.dataset.fontSize = fontSize;
     el.dataset.style = style;
     el.dataset.tail = 'none';
+    el.dataset.tailSize = '14';
+    el.dataset.tailSkew = '0';
     el.dataset.font = currentFont;
     el.dataset.text = text;
     el.dataset.width = '0';
@@ -1247,7 +1424,7 @@
     delBtn.addEventListener('click', function(e) {
       e.stopPropagation();
       el.remove();
-      if (selectedItem === el) { selectedItem = null; updateToolbarState(); updateStylePanel(); }
+      if (selectedItem === el) { selectedItem = null; updateToolbarState(); updateSpecArea(); }
     });
     el.appendChild(delBtn);
 
@@ -1266,7 +1443,6 @@
     applyBubbleStyle(el);
     selectItem(el);
 
-    // ★ 默认宽度和高度
     requestAnimationFrame(function() {
       var w = el.offsetWidth;
       var h = el.offsetHeight;
@@ -1286,10 +1462,7 @@
   fileInput.addEventListener('change', function(e) {
     var file = e.target.files && e.target.files[0];
     if (!file) return;
-    if (!file.type.match(/^image\//)) {
-      showToast('请选择图片文件');
-      return;
-    }
+    if (!file.type.match(/^image\//)) { showToast('请选择图片文件'); return; }
     showLoading(true);
     var reader = new FileReader();
     reader.onload = function(ev) {
@@ -1304,21 +1477,15 @@
           setTimeout(function() {
             showLoading(false);
             updateToolbarState();
-            updateStylePanel();
+            updateSpecArea();
             showToast('✅ 图片已导入');
           }, 50);
         });
       };
-      tempImg.onerror = function() {
-        showLoading(false);
-        showToast('图片加载失败');
-      };
+      tempImg.onerror = function() { showLoading(false); showToast('图片加载失败'); };
       tempImg.src = ev.target.result;
     };
-    reader.onerror = function() {
-      showLoading(false);
-      showToast('读取失败');
-    };
+    reader.onerror = function() { showLoading(false); showToast('读取失败'); };
     reader.readAsDataURL(file);
     setTimeout(function() { fileInput.value = ''; }, 500);
   });
@@ -1346,7 +1513,7 @@
       selectedItem.remove();
       selectedItem = null;
       updateToolbarState();
-      updateStylePanel();
+      updateSpecArea();
       showToast('已删除');
     }
   });
@@ -1357,12 +1524,12 @@
       overlayLayer.innerHTML = '';
       selectedItem = null;
       updateToolbarState();
-      updateStylePanel();
+      updateSpecArea();
       showToast('已清空');
     }
   });
 
-  // ==================== 字体选择 ====================
+  // ==================== 字体 ====================
   function buildFontList() {
     fontList.innerHTML = '';
     FONTS.forEach(function(f) {
@@ -1402,7 +1569,7 @@
     }
   });
 
-  // ==================== 样式选择 ====================
+  // ==================== 样式 ====================
   styleScroll.addEventListener('click', function(e) {
     var chip = e.target.closest('.style-chip');
     if (!chip || !selectedItem || selectedItem.dataset.type !== 'bubble') return;
@@ -1424,10 +1591,13 @@
       c.classList.toggle('active', c.dataset.tail === tail);
     });
     applyBubbleStyle(selectedItem);
+    // 显示/隐藏尾巴滑块
+    tailSizeRow.style.display = tail !== 'none' ? 'flex' : 'none';
+    tailSkewRow.style.display = tail !== 'none' ? 'flex' : 'none';
     showToast('尾巴：' + chip.textContent.trim());
   });
 
-  // ==================== 颜色选择 ====================
+  // ==================== 颜色 ====================
   textColorRow.addEventListener('click', function(e) {
     var dot = e.target.closest('.color-dot');
     if (!dot) return;
@@ -1526,7 +1696,6 @@
     }
   });
 
-  // ★ 宽度
   widthSlider.addEventListener('input', function() {
     var v = parseInt(widthSlider.value, 10);
     currentWidth = v;
@@ -1537,7 +1706,6 @@
     }
   });
 
-  // ★ 高度
   heightSlider.addEventListener('input', function() {
     var v = parseInt(heightSlider.value, 10);
     currentHeight = v;
@@ -1585,6 +1753,28 @@
     radiusVal.textContent = v;
     if (selectedItem && selectedItem.dataset.type === 'bubble') {
       selectedItem.dataset.radius = v;
+      applyBubbleStyle(selectedItem);
+    }
+  });
+
+  // ★ 尾巴粗细
+  tailSizeSlider.addEventListener('input', function() {
+    var v = parseInt(tailSizeSlider.value, 10);
+    currentTailSize = v;
+    tailSizeVal.textContent = v;
+    if (selectedItem && selectedItem.dataset.type === 'bubble') {
+      selectedItem.dataset.tailSize = v;
+      applyBubbleStyle(selectedItem);
+    }
+  });
+
+  // ★ 尾巴倾斜
+  tailSkewSlider.addEventListener('input', function() {
+    var v = parseInt(tailSkewSlider.value, 10);
+    currentTailSkew = v;
+    tailSkewVal.textContent = v + '°';
+    if (selectedItem && selectedItem.dataset.type === 'bubble') {
+      selectedItem.dataset.tailSkew = v;
       applyBubbleStyle(selectedItem);
     }
   });
@@ -1687,6 +1877,8 @@
     var font = el.dataset.font || currentFont;
     var bw = elRect.width * scaleX;
     var bh = elRect.height * scaleY;
+    var tailSize = parseInt(el.dataset.tailSize || '14', 10) * scaleX;
+    var tailSkew = parseInt(el.dataset.tailSkew || '0', 10);
 
     if (!textColor) {
       var hex = bgColor.replace('#','');
@@ -1708,13 +1900,13 @@
       roundRect(ctx, x, y, bw, bh, radius);
       ctx.fill();
       if (borderWidth > 0) ctx.stroke();
-      drawTail(ctx, tail, x, y, bw, bh, bgColor, borderColor, borderWidth);
+      drawTail(ctx, tail, x, y, bw, bh, bgColor, borderColor, borderWidth, tailSize, tailSkew);
     } else if (style === 'rect') {
       ctx.beginPath();
       ctx.rect(x, y, bw, bh);
       ctx.fill();
       if (borderWidth > 0) ctx.stroke();
-      drawTail(ctx, tail, x, y, bw, bh, bgColor, borderColor, borderWidth);
+      drawTail(ctx, tail, x, y, bw, bh, bgColor, borderColor, borderWidth, tailSize, tailSkew);
     } else if (style === 'ellipse' || style === 'thought') {
       ctx.beginPath();
       ctx.ellipse(x + bw/2, y + bh/2, bw/2, bh/2, 0, 0, Math.PI * 2);
@@ -1759,48 +1951,56 @@
     }
   }
 
-  function drawTail(ctx, tail, x, y, bw, bh, bgColor, borderColor, borderWidth) {
+  function drawTail(ctx, tail, x, y, bw, bh, bgColor, borderColor, borderWidth, size, skew) {
     if (tail === 'none') return;
     ctx.fillStyle = bgColor;
     ctx.strokeStyle = borderColor;
     ctx.lineWidth = borderWidth;
-    var size = 14 * (bw / 200);
-    if (size < 8) size = 8;
 
+    ctx.save();
     ctx.beginPath();
+
     if (tail === 'bottom-left') {
+      // 用 skew 来倾斜
+      var offset = Math.tan(skew * Math.PI / 180) * size;
       ctx.moveTo(x + 22, y + bh);
-      ctx.lineTo(x + 22 + size, y + bh);
+      ctx.lineTo(x + 22 + size + offset, y + bh);
       ctx.lineTo(x + 22, y + bh + size);
       ctx.closePath();
     } else if (tail === 'bottom-right') {
-      ctx.moveTo(x + bw - 22 - size, y + bh);
+      var offset2 = Math.tan(skew * Math.PI / 180) * size;
+      ctx.moveTo(x + bw - 22 - size - offset2, y + bh);
       ctx.lineTo(x + bw - 22, y + bh);
       ctx.lineTo(x + bw - 22, y + bh + size);
       ctx.closePath();
     } else if (tail === 'top-left') {
+      var offset3 = Math.tan(skew * Math.PI / 180) * size;
       ctx.moveTo(x + 22, y);
-      ctx.lineTo(x + 22 + size, y);
+      ctx.lineTo(x + 22 + size + offset3, y);
       ctx.lineTo(x + 22, y - size);
       ctx.closePath();
     } else if (tail === 'top-right') {
-      ctx.moveTo(x + bw - 22 - size, y);
+      var offset4 = Math.tan(skew * Math.PI / 180) * size;
+      ctx.moveTo(x + bw - 22 - size - offset4, y);
       ctx.lineTo(x + bw - 22, y);
       ctx.lineTo(x + bw - 22, y - size);
       ctx.closePath();
     } else if (tail === 'left') {
-      ctx.moveTo(x, y + bh/2 - size/2);
-      ctx.lineTo(x, y + bh/2 + size/2);
+      var offset5 = Math.tan(skew * Math.PI / 180) * size;
+      ctx.moveTo(x, y + bh/2 - size/2 - offset5);
+      ctx.lineTo(x, y + bh/2 + size/2 - offset5);
       ctx.lineTo(x - size, y + bh/2);
       ctx.closePath();
     } else if (tail === 'right') {
-      ctx.moveTo(x + bw, y + bh/2 - size/2);
-      ctx.lineTo(x + bw, y + bh/2 + size/2);
+      var offset6 = Math.tan(skew * Math.PI / 180) * size;
+      ctx.moveTo(x + bw, y + bh/2 - size/2 + offset6);
+      ctx.lineTo(x + bw, y + bh/2 + size/2 + offset6);
       ctx.lineTo(x + bw + size, y + bh/2);
       ctx.closePath();
     }
     ctx.fill();
     if (borderWidth > 0) ctx.stroke();
+    ctx.restore();
   }
 
   function drawExplosion(ctx, x, y, bw, bh, bgColor, borderColor, borderWidth) {
@@ -1839,11 +2039,14 @@
     ctx.closePath();
   }
 
+  // 初始化
   updateToolbarState();
-  updateStylePanel();
+  updateSpecArea();
 
-  // ★ 默认打开颜色面板
-  document.getElementById('colorPanel').classList.add('show');
+  // 默认打开样式面板和颜色面板
+  document.getElementById('stylePanel').classList.add('open');
+  document.getElementById('colorPanel').classList.add('open');
+  document.getElementById('sizePanel').classList.add('open');
 
   console.log('[初始化] 编辑器 Pro 已就绪');
 })();
